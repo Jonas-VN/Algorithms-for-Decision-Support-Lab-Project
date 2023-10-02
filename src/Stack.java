@@ -17,12 +17,16 @@ public class Stack {
     public int getId(){
         return id;
     }
+    public Location getLocation(){
+        return location;
+    }
     public boolean isFull(){
         return boxes.size() >= capacity;
     }
     public void addBox(Box box){
         if(!isFull()){
             boxes.add(box);
+            box.setStack(this);
             System.out.println("Box with id " + box.getId() + " has been added to stack with id " + id + ".");
         }
         else{
@@ -33,6 +37,7 @@ public class Stack {
     public void removeBox(Box box){
         if(boxes.contains(box)) {
             boxes.remove(box);
+            box.setStack(null);
             System.out.println("Box with id " + box.getId() + " has been removed from stack with id " + id + ".");
         }
         else{

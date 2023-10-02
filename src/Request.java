@@ -10,4 +10,11 @@ public class Request {
         this.destination = destination;
         this.box = box;
     }
+
+    public void handleRequest(Vehicle vehicle){
+        vehicle.moveTo(this.pickup.getLocation());
+        vehicle.loadBox(this.box);
+        vehicle.moveTo(this.destination.getLocation());
+        vehicle.unloadBox(this.box, destination);
+    }
 }

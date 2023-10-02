@@ -27,6 +27,7 @@ public class Vehicle {
     public void loadBox(Box box){
         if(!isFull()){
             boxes.add(box);
+            box.getStack().removeBox(box);
             System.out.println("Vehicle " + id + " loaded box " + box.getId() + ".");
         }
         else{
@@ -34,9 +35,10 @@ public class Vehicle {
         }
     }
 
-    public void unloadBox(Box box){
+    public void unloadBox(Box box, Stack stack){
         if(boxes.contains(box)){
             boxes.remove(box);
+            stack.addBox(box);
             System.out.println("Vehicle " + id + " has unloaded box " + box.getId() + ".");
         }
         else{

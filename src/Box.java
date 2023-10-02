@@ -8,4 +8,10 @@ public class Box {
     public int getId(){
         return id;
     }
+    public void setStack(Stack stack){
+        this.stack = stack;
+    }
+    public Stack getStack(){
+        return stack;
+    }
 }

@@ -11,5 +11,6 @@ public class Main {
         Box box1 = new Box(1);
         buffer.addBox(box1);
         Request request1 = new Request(1, buffer, stack1, box1);
+        request1.handleRequest(vehicle1);
     }
 }

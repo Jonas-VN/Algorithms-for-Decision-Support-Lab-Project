@@ -6,4 +6,7 @@ public class Box {
         this.id = id;
         this.stack = stack;
     }
+    public int getId(){
+        return id;
+    }
 }

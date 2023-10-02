@@ -24,6 +24,10 @@ public class Vehicle {
         return boxes.size() >= capacity;
     }
 
+    public Location getLocation(){
+        return location;
+    }
+
     public void loadBox(Box box){
         if(!isFull()){
             boxes.add(box);

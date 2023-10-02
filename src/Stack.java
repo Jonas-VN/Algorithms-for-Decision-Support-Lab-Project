@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.List;
 
 public class Stack {
@@ -6,11 +7,15 @@ public class Stack {
     private int capacity;
     private List<Box> boxes;
 
-    public Stack(int id, Location location, int capacity, List<Box> boxes){
+    public Stack(int id, Location location, int capacity){
         this.id = id;
         this.location = location;
         this.capacity = capacity;
-        this.boxes = boxes;
+        this.boxes = new ArrayList<>();
+    }
+
+    public int getId(){
+        return id;
     }
     public boolean isFull(){
         return boxes.size() >= capacity;

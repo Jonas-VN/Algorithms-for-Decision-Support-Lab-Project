@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.List;
 
 public class Vehicle {
@@ -7,12 +8,16 @@ public class Vehicle {
     private int capacity;
     private List<Box> boxes;
 
-    public Vehicle(int id, Location location, int speed, int capacity, List<Box> boxes){
+    public Vehicle(int id, Location location, int speed, int capacity){
         this.id = id;
         this.location = location;
         this.speed = speed;
         this.capacity = capacity;
-        this.boxes = boxes;
+        this.boxes = new ArrayList<>();
+    }
+
+    public int getId(){
+        return id;
     }
 
     public boolean isFull(){

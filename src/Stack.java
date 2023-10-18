@@ -65,4 +65,18 @@ public class Stack {
             System.out.println("The box with id " + box.getId() + " is not present in stack with id " + id + "." );
         }
     }
+
+    @Override
+    public String toString() {
+        StringBuilder ret = new StringBuilder("Stack{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", location=" + location +
+                ", capacity=" + capacity +
+                ", boxes:\n");
+        for (Box box : boxes) ret.append("\t").append(box).append("\n");
+        ret.append('}');
+
+        return ret.toString();
+    }
 }

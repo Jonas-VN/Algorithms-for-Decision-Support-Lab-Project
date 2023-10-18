@@ -51,26 +51,21 @@ public class Warehouse {
     }
 
     public void everythingToString(){
-        for(int i = 0; i < this.stacks.size(); i++){
-            System.out.println("Stack ID: " + this.stacks.get(i).getId() + ", Name: " + this.stacks.get(i).getName() + ", x: " + this.stacks.get(i).getLocation().getX() + ", Y: " + this.stacks.get(i).getLocation().getY() + ", Capacity: " + this.stacks.get(i).getCapacity() + ", boxes: ");
-            for(int j = 0; j < this.stacks.get(i).getBoxes().size(); j++){
-                System.out.println("Box ID: " + this.stacks.get(i).getBoxes().get(j).getId() + ", Stack: " + this.stacks.get(i).getBoxes().get(j).getStack().getName());
-            }
+        for (Stack stack : this.stacks) {
+            System.out.println(stack);
         }
-        for(int k = 0; k < this.vehicles.size(); k++){
-            System.out.println("Vehicle ID: " + this.vehicles.get(k).getName() + ", Name: " + this.vehicles.get(k).getName() + ", X:" +
-                    this.vehicles.get(k).getLocation().getX() + ", Y: " + this.vehicles.get(k).getLocation().getY() + ", Capacity: " + this.vehicles.get(k).getCapacity() +
-                    ", Speed: " + this.vehicles.get(k).getSpeed() + ", boxes: ");
-            for(int l = 0; l < this.vehicles.get(k).getBoxes().size(); l++){
-                System.out.println(this.vehicles.get(k).getBoxes().get(l).getId());
-            }
+        for (Vehicle vehicle : this.vehicles) {
+            System.out.println(vehicle);
+        }
+        for (Request req : requests) {
+            System.out.println(req);
         }
     }
 
     public Stack findStackBasedOnName(String name){
-        for(int i = 0; i < this.stacks.size(); i++){
-            if(this.stacks.get(i).getName().equals(name)){
-                return(this.stacks.get(i));
+        for (Stack stack : this.stacks) {
+            if (stack.getName().equals(name)) {
+                return stack;
             }
         }
         return null;
@@ -133,7 +128,7 @@ public class Warehouse {
             Stack placeLocationStack = findStackBasedOnName(placeLocationName);
             String boxIdStack = requestData.getString("boxID");
             Box pickupBox = pickupLocationStack.findBoxById(boxIdStack);
-            this.requests.add(new Request(requestId, pickupLocationStack, placeLocationStack,pickupBox));
+            this.requests.add(new Request(requestId, pickupLocationStack, placeLocationStack, pickupBox));
         }
     }
 }

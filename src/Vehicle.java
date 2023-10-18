@@ -73,4 +73,17 @@ public class Vehicle {
     public void moveTo(Location location){
         this.location = location;
     }
+
+    @Override
+    public String toString() {
+        return "Vehicle{" +
+                "id=" + id +
+                ", location=" + location +
+                ", speed=" + speed +
+                ", capacity=" + capacity +
+                ", boxes=" + boxes +
+                ", name='" + name + '\'' +
+                ", loadingDuration=" + loadingDuration +
+                '}';
+    }
 }

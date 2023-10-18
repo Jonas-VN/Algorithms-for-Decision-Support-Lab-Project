@@ -61,4 +61,14 @@ public class Request {
         }
 
     }
+
+    @Override
+    public String toString() {
+        return "Request{" +
+                "id=" + id +
+                ", pickup=" + pickup +
+                ", destination=" + destination +
+                ", box=" + box +
+                '}';
+    }
 }

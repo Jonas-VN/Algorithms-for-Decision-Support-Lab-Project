@@ -18,7 +18,6 @@ public class Location {
     public int getX(){
         return x;
     }
-
     public int getY(){
         return y;
     }
@@ -29,4 +28,12 @@ public class Location {
         double distance = Math.sqrt(dx * dx + dy * dy);
         return distance;
     }
+    @Override
+    public String toString() {
+        return "Location{" +
+                "x=" + x +
+                ", y=" + y +
+                '}';
+    }
+}
 }

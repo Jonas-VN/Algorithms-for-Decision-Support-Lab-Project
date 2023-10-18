@@ -29,6 +29,15 @@ public class Stack {
     public boolean isFull(){
         return boxes.size() >= capacity;
     }
+
+    public Box findBoxById(String Id){
+        for(int i = 0; i < this.boxes.size(); i++){
+            if(this.boxes.get(i).getId() == Id){
+                return(this.boxes.get(i));
+            }
+        }
+        return null;
+    }
     public void addBox(Box box){
         if(!isFull()){
             boxes.add(box);

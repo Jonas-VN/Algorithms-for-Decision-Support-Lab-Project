@@ -38,6 +38,15 @@ public class Warehouse {
             System.out.println("Vehicle " + vehicle.getId() + " has been added to the warehouse.");
         }
     }
+
+    public Stack findStackBasedOnName(String name){
+        for(int i = 0; i < this.stacks.size(); i++){
+            if(this.stacks.get(i).getName() == name){
+                return(this.stacks.get(i));
+            }
+        }
+        return null;
+    }
     public void readInput(String file) throws IOException {
         String jsonContent = new String(Files.readAllBytes(Paths.get(file)));
         JSONObject jsonData = new JSONObject(jsonContent);
@@ -45,24 +54,56 @@ public class Warehouse {
         int vehicleSpeed = jsonData.getInt("vehiclespeed");
         int loadingDuration = jsonData.getInt("loadingduration");
 
-
+        JSONArray bufferpoints = jsonData.getJSONArray("bufferpoints");
+        JSONObject bufferpointsData = bufferpoints.getJSONObject(0);
+        int bufferpointId = bufferpointsData.getInt("ID");
+        String bufferpointName = bufferpointsData.getString("name");
+        int bufferpointX = bufferpointsData.getInt("x");
+        int bufferpointY = bufferpointsData.getInt("y");
+        Location bufferpointLocation = new Location(bufferpointX,bufferpointY);
+        List<Box> bufferpointBoxes = new ArrayList<>();
+        this.stacks.add(new Stack(bufferpointId, bufferpointLocation, 99999999, bufferpointName, bufferpointBoxes));
 
         JSONArray stacks = jsonData.getJSONArray("stacks");
         for(int i = 0; i < stacks.length(); i++){
             JSONObject stackData = stacks.getJSONObject(i);
-            int ID = stackData.getInt("ID");
-            String name = stackData.getString("name");
-            int x = stackData.getInt("x");
-            int y = stackData.getInt("y");
+            int stackId = stackData.getInt("ID");
+            String stackName = stackData.getString("name");
+            int stackX = stackData.getInt("x");
+            int stackY = stackData.getInt("y");
             List<Box> boxes = new ArrayList<>();
             JSONArray boxArray = stackData.getJSONArray("boxes");
             for(int j = 0; j < boxArray.length(); j++) {
                 String boxId = boxArray.getString(j);
                 boxes.add(new Box(boxId));
             }
-            Location location = new Location(x,y);
-            this.stacks.add(new Stack(ID, location, stackCapacity, name, boxes));
+            Location stackLocation = new Location(stackX,stackY);
+            this.stacks.add(new Stack(stackId, stackLocation, stackCapacity, stackName, boxes));
         }
-
+        JSONArray vehicles = jsonData.getJSONArray("vehicles");
+        for(int k = 0; k < vehicles.length(); k++){
+            JSONObject vehicleData = vehicles.getJSONObject(k);
+            int vehicleId = vehicleData.getInt("ID");
+            String vehicleName = vehicleData.getString("name");
+            int vehicleCapacity = vehicleData.getInt("capacity");
+            int vehicleX = vehicleData.getInt("xCoordinate");
+            int vehicleY =  vehicleData.getInt("yCoordinate");
+            Location vehicleLocation = new Location(vehicleX,vehicleY);
+            this.vehicles.add(new Vehicle(vehicleId, vehicleLocation, vehicleSpeed, vehicleCapacity, vehicleName));
+        }
+        JSONArray requests = jsonData.getJSONArray("requests");
+        for(int l = 0; l < requests.length(); l++){
+            JSONObject requestData = requests.getJSONObject(l);
+            int requestId = requestData.getInt("ID");
+            JSONArray pickupArray = requestData.getJSONArray("pickuplocation");
+            String pickupLocationName = pickupArray.getString(0);
+            Stack pickupLocationStack = findStackBasedOnName(pickupLocationName);
+            JSONArray placeArray = requestData.getJSONArray("placelocation");
+            String placeLocationName = placeArray.getString(0);
+            Stack placeLocationStack = findStackBasedOnName(placeLocationName);
+            String boxIdStack = requestData.getString("boxID");
+            Box pickupBox = pickupLocationStack.findBoxById(boxIdStack);
+            this.requests.add(new Request(requestId, pickupLocationStack, placeLocationStack,pickupBox));
+        }
     }
 }

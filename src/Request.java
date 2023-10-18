@@ -9,6 +9,8 @@ public class Request {
     private Stack pickup;
     private Stack destination;
     private Box box;
+    private boolean pickupDone;
+    private boolean placeDone;
 
     public Request(int id, Stack pickup, Stack destination, Box box){
         this.id = id;
@@ -17,7 +19,26 @@ public class Request {
         this.box = box;
     }
 
-    public void handleRequest(Vehicle vehicle, Warehouse warehouse, File output){
+    public Stack getPickup(){
+        return pickup;
+    }
+    public Stack getDestination(){
+        return destination;
+    }
+    public boolean ispickupDone(){
+        return pickupDone;
+    }
+    public boolean isPlaceDone(){
+        return pickupDone;
+    }
+    public void setPickupDone(){
+        pickupDone = true;
+    }
+    public void setPlaceDone(){
+        placeDone = true;
+    }
+
+    public void handleRequest(Vehicle vehicle, Warehouse warehouse, File output, String operation){
         int startX = vehicle.getLocation().getX();
         int startY = vehicle.getLocation().getY();
         int startTime = warehouse.getTime();
@@ -28,7 +49,7 @@ public class Request {
         int endX = vehicle.getLocation().getX();
         int endY = vehicle.getLocation().getY();
         int endTime = warehouse.getTime();
-        String line = (vehicle.getName() + ";" + startX + ";" + startY + ";" + startTime + ";" + endX + ";" + endY + ";" + endTime + ";" + this.box.getId() + ";" + "PU");
+        String line = (vehicle.getName() + ";" + startX + ";" + startY + ";" + startTime + ";" + endX + ";" + endY + ";" + endTime + ";" + this.box.getId() + ";" + operation);
 
         try(FileWriter fw = new FileWriter(output, true);
             BufferedWriter bw = new BufferedWriter(fw)) {

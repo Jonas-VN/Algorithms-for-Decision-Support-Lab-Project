@@ -1,3 +1,4 @@
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import org.json.JSONArray;
@@ -66,6 +67,37 @@ public class Warehouse {
             }
         }
     }
+
+    public void handleRequests(File output){
+            double smallestDistance = 9999999;
+            Request closestRequest = requests.get(0);
+            String operation = null;
+            Vehicle vehicle = vehicles.get(0);
+            for(int i = 0; i < requests.size(); i++){
+                double distanceDestination = requests.get(i).getDestination().getLocation().getDistance(vehicle.getLocation());
+                double distancePickup = requests.get(i).getPickup().getLocation().getDistance(vehicle.getLocation());
+                if(distanceDestination <= smallestDistance && !requests.get(i).isPlaceDone()){
+                    smallestDistance = distanceDestination;
+                    closestRequest = requests.get(i);
+                    operation = "PL";
+                }
+                if(distancePickup <= smallestDistance && !requests.get(i).ispickupDone()){
+                    smallestDistance = distancePickup;
+                    closestRequest = requests.get(i);
+                    operation = "PU";
+                }
+            }
+            if(operation.equals("PL")){
+                closestRequest.setPlaceDone();
+            }
+            else if(operation.equals("PU")){
+                closestRequest.setPickupDone();
+            }
+            if(closestRequest.ispickupDone() && closestRequest.isPlaceDone()){
+                requests.remove(closestRequest);
+            }
+            closestRequest.handleRequest(vehicle, this, output, operation);
+        }
 
     public Stack findStackBasedOnName(String name){
         for(int i = 0; i < this.stacks.size(); i++){

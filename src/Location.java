@@ -18,7 +18,15 @@ public class Location {
     public int getX(){
         return x;
     }
+
     public int getY(){
         return y;
+    }
+
+    public double getDistance(Location location){
+        int dx = this.x - location.x;
+        int dy = this.y - location.y;
+        double distance = Math.sqrt(dx * dx + dy * dy);
+        return distance;
     }
 }

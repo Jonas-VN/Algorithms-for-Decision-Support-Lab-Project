@@ -8,14 +8,16 @@ public class Vehicle {
     private int capacity;
     private List<Box> boxes;
     private String name;
+    private final int loadingDuration;
 
-    public Vehicle(int id, Location location, int speed, int capacity, String name){
+    public Vehicle(int id, Location location, int speed, int capacity, String name, int loadingDuration){
         this.id = id;
         this.location = location;
         this.speed = speed;
         this.capacity = capacity;
         this.boxes = new ArrayList<>();
         this.name = name;
+        this.loadingDuration = loadingDuration;
     }
 
     public String getName() {

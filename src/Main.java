@@ -12,6 +12,8 @@ public class Main {
 
         File output = new File("src/outputs/output" + inputFile + ".txt");
 
+        warehouse.everythingToString();
+
 //        Stack buffer = new Stack(0, new Location(0,0), 9999999, "stack_0");
 //        Stack stack1 = new Stack(1, new Location(3,4), 10, "stack_1");
 //        warehouse.addStack(buffer);

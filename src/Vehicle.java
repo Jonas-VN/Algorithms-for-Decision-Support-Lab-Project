@@ -34,6 +34,18 @@ public class Vehicle {
         return location;
     }
 
+    public int getCapacity(){
+        return capacity;
+    }
+
+    public int getSpeed(){
+        return speed;
+    }
+
+    public List<Box> getBoxes(){
+        return boxes;
+    }
+
     public void loadBox(Box box){
         if(!isFull()){
             boxes.add(box);

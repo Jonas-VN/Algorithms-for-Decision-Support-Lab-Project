@@ -20,6 +20,12 @@ public class Stack {
         return name;
     }
 
+    public int getCapacity(){
+        return capacity;
+    }
+    public List<Box> getBoxes(){
+        return boxes;
+    }
     public int getId(){
         return id;
     }
@@ -32,7 +38,7 @@ public class Stack {
 
     public Box findBoxById(String Id){
         for(int i = 0; i < this.boxes.size(); i++){
-            if(this.boxes.get(i).getId() == Id){
+            if(this.boxes.get(i).getId().equals(Id)){
                 return(this.boxes.get(i));
             }
         }

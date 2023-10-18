@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 public class Warehouse {
     private int maxStacks;
     private int maxVehicles;
+    private int time;
     private List<Stack> stacks;
     private List<Vehicle> vehicles;
     private List<Request> requests;
@@ -19,6 +20,9 @@ public class Warehouse {
         this.requests = new ArrayList<>();
         this.vehicles = new ArrayList<>();
         this.stacks = new ArrayList<>();
+    }
+    public int getTime(){
+        return time;
     }
     public void addStack(Stack stack){
         if(stacks.size() >= maxStacks){
@@ -39,9 +43,26 @@ public class Warehouse {
         }
     }
 
+    public void everythingToString(){
+        for(int i = 0; i < this.stacks.size(); i++){
+            System.out.println("(Id: " + this.stacks.get(i).getId() + ", Name: " + this.stacks.get(i).getName() + ", x: " + this.stacks.get(i).getLocation().getX() + ", Y: " + this.stacks.get(i).getLocation().getY() + ", Capacity: " + this.stacks.get(i).getCapacity() + ", boxes: ");
+            for(int j = 0; j < this.stacks.get(i).getBoxes().size(); j++){
+                System.out.println("Box ID: " + this.stacks.get(i).getBoxes().get(j).getId());
+            }
+        }
+        for(int k = 0; k < this.vehicles.size(); k++){
+            System.out.println("Vehicle ID: " + this.vehicles.get(k).getName() + ", Name: " + this.vehicles.get(k).getName() + ", X:" +
+                    this.vehicles.get(k).getLocation().getX() + ", Y: " + this.vehicles.get(k).getLocation().getY() + ", Capacity: " + this.vehicles.get(k).getCapacity() +
+                    ", Speed: " + this.vehicles.get(k).getSpeed() + ", boxes: ");
+            for(int l = 0; l < this.vehicles.get(k).getBoxes().size(); l++){
+                System.out.println(this.vehicles.get(k).getBoxes().get(l).getId());
+            }
+        }
+    }
+
     public Stack findStackBasedOnName(String name){
         for(int i = 0; i < this.stacks.size(); i++){
-            if(this.stacks.get(i).getName() == name){
+            if(this.stacks.get(i).getName().equals(name)){
                 return(this.stacks.get(i));
             }
         }
@@ -95,10 +116,10 @@ public class Warehouse {
         for(int l = 0; l < requests.length(); l++){
             JSONObject requestData = requests.getJSONObject(l);
             int requestId = requestData.getInt("ID");
-            JSONArray pickupArray = requestData.getJSONArray("pickuplocation");
+            JSONArray pickupArray = requestData.getJSONArray("pickupLocation");
             String pickupLocationName = pickupArray.getString(0);
             Stack pickupLocationStack = findStackBasedOnName(pickupLocationName);
-            JSONArray placeArray = requestData.getJSONArray("placelocation");
+            JSONArray placeArray = requestData.getJSONArray("placeLocation");
             String placeLocationName = placeArray.getString(0);
             Stack placeLocationStack = findStackBasedOnName(placeLocationName);
             String boxIdStack = requestData.getString("boxID");

@@ -11,10 +11,17 @@ public class Request {
         this.box = box;
     }
 
-    public void handleRequest(Vehicle vehicle){
+    public void handleRequest(Vehicle vehicle, Warehouse warehouse){
+        int startX = vehicle.getLocation().getX();
+        int startY = vehicle.getLocation().getY();
+        int startTime = warehouse.getTime();
         vehicle.moveTo(this.pickup.getLocation());
         vehicle.loadBox(this.box);
         vehicle.moveTo(this.destination.getLocation());
         vehicle.unloadBox(this.box, destination);
+        int endX = vehicle.getLocation().getX();
+        int endY = vehicle.getLocation().getY();
+        int endTime = warehouse.getTime();
+
     }
 }

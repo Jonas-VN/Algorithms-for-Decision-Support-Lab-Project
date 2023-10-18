@@ -1,11 +1,11 @@
 public class Box {
-    private int id;
+    private String id;
     private Stack stack;
 
-    public Box(int id){
+    public Box(String id){
         this.id = id;
     }
-    public int getId(){
+    public String getId(){
         return id;
     }
     public void setStack(Stack stack){

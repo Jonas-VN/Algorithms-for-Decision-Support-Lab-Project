@@ -7,13 +7,19 @@ public class Vehicle {
     private int speed;
     private int capacity;
     private List<Box> boxes;
+    private String name;
 
-    public Vehicle(int id, Location location, int speed, int capacity){
+    public Vehicle(int id, Location location, int speed, int capacity, String name){
         this.id = id;
         this.location = location;
         this.speed = speed;
         this.capacity = capacity;
         this.boxes = new ArrayList<>();
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public int getId(){

@@ -3,15 +3,21 @@ import java.util.List;
 
 public class Stack {
     private int id;
+    private String name;
     private Location location;
     private int capacity;
     private List<Box> boxes;
 
-    public Stack(int id, Location location, int capacity){
+    public Stack(int id, Location location, int capacity, String name){
         this.id = id;
         this.location = location;
         this.capacity = capacity;
         this.boxes = new ArrayList<>();
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public int getId(){

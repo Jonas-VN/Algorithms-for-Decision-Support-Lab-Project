@@ -20,9 +20,16 @@ public class Warehouse {
         this.requests = new ArrayList<>();
         this.vehicles = new ArrayList<>();
         this.stacks = new ArrayList<>();
+        this.time = 0;
     }
     public int getTime(){
         return time;
+    }
+    public List<Request> getRequests(){
+        return requests;
+    }
+    public List<Vehicle> getVehicles(){
+        return vehicles;
     }
     public void addStack(Stack stack){
         if(stacks.size() >= maxStacks){
@@ -45,7 +52,7 @@ public class Warehouse {
 
     public void everythingToString(){
         for(int i = 0; i < this.stacks.size(); i++){
-            System.out.println("(Id: " + this.stacks.get(i).getId() + ", Name: " + this.stacks.get(i).getName() + ", x: " + this.stacks.get(i).getLocation().getX() + ", Y: " + this.stacks.get(i).getLocation().getY() + ", Capacity: " + this.stacks.get(i).getCapacity() + ", boxes: ");
+            System.out.println("Stack ID: " + this.stacks.get(i).getId() + ", Name: " + this.stacks.get(i).getName() + ", x: " + this.stacks.get(i).getLocation().getX() + ", Y: " + this.stacks.get(i).getLocation().getY() + ", Capacity: " + this.stacks.get(i).getCapacity() + ", boxes: ");
             for(int j = 0; j < this.stacks.get(i).getBoxes().size(); j++){
                 System.out.println("Box ID: " + this.stacks.get(i).getBoxes().get(j).getId());
             }

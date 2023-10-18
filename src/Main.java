@@ -8,11 +8,11 @@ public class Main {
         String inputFile = "3_3_1";
         File input = new File("src/inputs/I" + inputFile + ".json");
         warehouse.readInput(input.getAbsolutePath());
-
-
         File output = new File("src/outputs/output" + inputFile + ".txt");
 
         warehouse.everythingToString();
+
+        warehouse.getRequests().get(0).handleRequest(warehouse.getVehicles().get(0), warehouse, output);
 
 //        Stack buffer = new Stack(0, new Location(0,0), 9999999, "stack_0");
 //        Stack stack1 = new Stack(1, new Location(3,4), 10, "stack_1");

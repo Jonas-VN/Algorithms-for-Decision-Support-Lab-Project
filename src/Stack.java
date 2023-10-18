@@ -8,11 +8,11 @@ public class Stack {
     private int capacity;
     private List<Box> boxes;
 
-    public Stack(int id, Location location, int capacity, String name){
+    public Stack(int id, Location location, int capacity, String name, List<Box> boxes){
         this.id = id;
         this.location = location;
         this.capacity = capacity;
-        this.boxes = new ArrayList<>();
+        this.boxes = boxes;
         this.name = name;
     }
 

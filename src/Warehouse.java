@@ -47,7 +47,7 @@ public class Warehouse {
         for(int i = 0; i < this.stacks.size(); i++){
             System.out.println("(Id: " + this.stacks.get(i).getId() + ", Name: " + this.stacks.get(i).getName() + ", x: " + this.stacks.get(i).getLocation().getX() + ", Y: " + this.stacks.get(i).getLocation().getY() + ", Capacity: " + this.stacks.get(i).getCapacity() + ", boxes: ");
             for(int j = 0; j < this.stacks.get(i).getBoxes().size(); j++){
-                System.out.println("Box ID: " + this.stacks.get(i).getBoxes().get(j).getId());
+                System.out.println("Box ID: " + this.stacks.get(i).getBoxes().get(j).getId() + ", Stack: " + this.stacks.get(i).getBoxes().get(j).getStack().getName());
             }
         }
         for(int k = 0; k < this.vehicles.size(); k++){
@@ -99,7 +99,9 @@ public class Warehouse {
                 boxes.add(new Box(boxId));
             }
             Location stackLocation = new Location(stackX,stackY);
-            this.stacks.add(new Stack(stackId, stackLocation, stackCapacity, stackName, boxes));
+            Stack stack = new Stack(stackId, stackLocation, stackCapacity, stackName, boxes);
+            this.stacks.add(stack);
+            for (Box box : stack.getBoxes()) box.setStack(stack);
         }
         JSONArray vehicles = jsonData.getJSONArray("vehicles");
         for(int k = 0; k < vehicles.length(); k++){
@@ -110,7 +112,7 @@ public class Warehouse {
             int vehicleX = vehicleData.getInt("xCoordinate");
             int vehicleY =  vehicleData.getInt("yCoordinate");
             Location vehicleLocation = new Location(vehicleX,vehicleY);
-            this.vehicles.add(new Vehicle(vehicleId, vehicleLocation, vehicleSpeed, vehicleCapacity, vehicleName));
+            this.vehicles.add(new Vehicle(vehicleId, vehicleLocation, vehicleSpeed, vehicleCapacity, vehicleName, loadingDuration));
         }
         JSONArray requests = jsonData.getJSONArray("requests");
         for(int l = 0; l < requests.length(); l++){

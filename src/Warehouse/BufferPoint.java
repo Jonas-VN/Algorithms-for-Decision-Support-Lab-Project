@@ -5,7 +5,7 @@ import Utils.Location;
 import java.util.ArrayList;
 
 public class BufferPoint extends Storage  {
-    private ArrayList<Box> boxes;
+    private final ArrayList<Box> boxes;
     public BufferPoint(int id, Location location, int capacity, String name, ArrayList<Box> boxes) {
         super(id, location, capacity, name);
         this.boxes = boxes;

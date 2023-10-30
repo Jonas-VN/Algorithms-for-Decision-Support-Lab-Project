@@ -3,10 +3,10 @@ package Warehouse;
 import Utils.Location;
 
 public abstract class Storage {
-    private int id;
-    private String name;
-    private Location location;
-    protected int capacity;
+    private final int id;
+    private final String name;
+    private final Location location;
+    protected final int capacity;
 
     public Storage(int id, Location location, int capacity, String name) {
         super();

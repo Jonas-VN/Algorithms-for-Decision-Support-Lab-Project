@@ -2,10 +2,10 @@ package Warehouse;
 
 
 public class Request {
-    private int id;
-    private Storage pickup;
-    private Storage destination;
-    private Box box;
+    private final int id;
+    private final Storage pickup;
+    private final Storage destination;
+    private final Box box;
     private int startTime = 0;
 
     public Request(int id, Storage pickup, Storage destination, Box box){

@@ -5,14 +5,14 @@ import Utils.Location;
 import java.util.ArrayList;
 
 public class Vehicle {
-    private int id;
+    private final int id;
     private Location location;
-    private int speed;
-    private int capacity;
-    private String name;
+    private final int speed;
+    private final int capacity;
+    private final String name;
     private final int loadingDuration;
-    private Stack boxes;
-    private ArrayList<Request> queue = new ArrayList<>();
+    private final Stack boxes;
+    private final ArrayList<Request> queue = new ArrayList<>();
     private int queueIndex = 0;
     private VehicleState state = VehicleState.IDLE;
     private int timeToFinishState = 0;

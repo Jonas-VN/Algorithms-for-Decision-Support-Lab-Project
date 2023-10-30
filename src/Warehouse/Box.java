@@ -3,7 +3,7 @@ package Warehouse;
 import java.util.Objects;
 
 public class Box {
-    private String id;
+    private final String id;
     private Storage storage;
 
     public Box(String id) {

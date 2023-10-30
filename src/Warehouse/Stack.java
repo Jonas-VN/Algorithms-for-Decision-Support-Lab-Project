@@ -3,7 +3,7 @@ package Warehouse;
 import Utils.Location;
 
 public class Stack extends Storage {
-    private java.util.Stack<Box> boxes = new java.util.Stack<>();
+    private final java.util.Stack<Box> boxes = new java.util.Stack<>();
 
     public Stack(int id, Location location, int capacity, String name) {
         super(id, location, capacity, name);

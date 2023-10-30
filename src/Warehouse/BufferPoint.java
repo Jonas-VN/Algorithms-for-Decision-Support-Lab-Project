@@ -32,6 +32,7 @@ public class BufferPoint extends Storage  {
     @Override
     public void addBox(Box box) {
         this.boxes.add(box);
+        box.setStack(this);
     }
 
     @Override

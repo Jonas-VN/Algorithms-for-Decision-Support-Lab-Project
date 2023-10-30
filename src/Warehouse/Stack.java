@@ -30,6 +30,7 @@ public class Stack extends Storage {
     @Override
     public void addBox(Box box) {
         this.boxes.push(box);
+        box.setStack(this);
     }
 
     @Override

@@ -101,7 +101,6 @@ public class Vehicle {
         if (this.boxes.contains(box)){
             this.boxes.removeBox(box);
             storage.addBox(box);
-            box.setStack(storage);
             System.out.println("Vehicle " + this.id + " has unloaded box " + box.getId() + ".");
         }
         else {

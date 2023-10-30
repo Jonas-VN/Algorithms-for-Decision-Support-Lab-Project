@@ -115,6 +115,12 @@ public class JSONParser {
 
             String boxIdStack = requestData.getString("boxID");
             Box pickupBox = pickupLocationStack.findBoxById(boxIdStack);
+            if (pickupBox == null) {
+                // Box wasn't found in the pickup stack, so it must be in the BufferPoint
+                pickupLocationStack.addBox(pickupBox = new Box(boxIdStack));
+                pickupBox.setStack(pickupLocationStack);
+                System.out.println(pickupBox);
+            }
 
             requestsList.add(new Request(requestId, pickupLocationStack, placeLocationStack, pickupBox));
         }

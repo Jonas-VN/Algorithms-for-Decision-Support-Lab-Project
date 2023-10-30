@@ -35,6 +35,9 @@ public class Stack extends Storage {
     @Override
     public void removeBox(Box box) {
         Box removedBox = this.boxes.pop();
+        if (removedBox != box) {
+            System.out.println("ERROR: Box " + box.getId() + " != " + removedBox.getId() + "! RemovedBox was probably not on top of the stack...");
+        }
         assert removedBox == box : "Box " + box.getId() + " != " + removedBox.getId() + "! RemovedBox was probably not on top of the stack...";
         box.setStack(null);
     }

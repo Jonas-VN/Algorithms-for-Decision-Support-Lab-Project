@@ -27,6 +27,11 @@ public class Vehicle {
         this.boxes = new Stack(-1, null, capacity, "Vehicle " + id);
     }
 
+    public void clearRequests() {
+        this.queue.clear();
+        this.queueIndex = 0;
+    }
+
     public void setTimeToFinishState(int timeToFinish) {
         this.timeToFinishState = timeToFinish;
     }
@@ -50,10 +55,6 @@ public class Vehicle {
     public boolean addRequest(Request request){
         if (this.queue.size() >= this.capacity) return false;
         return this.queue.add(request);
-    }
-
-    public Request getFirstRequest(){
-        return this.queue.get(0);
     }
 
     public Request getCurrentRequest(){
@@ -100,6 +101,7 @@ public class Vehicle {
         if (this.boxes.contains(box)){
             this.boxes.removeBox(box);
             storage.addBox(box);
+            box.setStack(storage);
             System.out.println("Vehicle " + this.id + " has unloaded box " + box.getId() + ".");
         }
         else {

@@ -60,10 +60,6 @@ public class Vehicle {
         return this.queue.get(this.queueIndex);
     }
 
-    public void removeFirstRequest(){
-        this.queue.removeFirst();
-    }
-
     public String getName() {
         return this.name;
     }
@@ -82,10 +78,6 @@ public class Vehicle {
 
     public Location getLocation(){
         return this.location;
-    }
-
-    public int getCapacity(){
-        return this.capacity;
     }
 
     public int getSpeed(){
@@ -140,7 +132,7 @@ public class Vehicle {
         this.queueIndex = Math.max(this.queueIndex - 1, 0);
     }
 
-    public boolean doneAlRequests() {
+    public boolean doneAllRequests() {
         return this.queueIndex == this.queue.size() - 1;
     }
 }

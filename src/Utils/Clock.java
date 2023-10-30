@@ -8,12 +8,9 @@ public class Clock {
         return time;
     }
 
-    public int tick(){
-        if (skipNextTick) {
-            skipNextTick = false;
-            return time;
-        }
-        return ++time;
+    public void tick(){
+        if (skipNextTick) skipNextTick = false;
+        else time++;
     }
 
     public void skipNextTick() {

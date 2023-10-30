@@ -29,8 +29,11 @@ public abstract class Storage {
     public abstract boolean isEmpty();
 
     public abstract Box findBoxById(String Id);
+
     public abstract void addBox(Box box);
+
     public abstract void removeBox(Box box);
+
     public abstract boolean contains(Box box);
 }
 

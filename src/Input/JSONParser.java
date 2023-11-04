@@ -1,5 +1,6 @@
 package Input;
 
+import Output.OutputWriter;
 import Utils.Location;
 import Warehouse.*;
 import org.json.JSONArray;
@@ -75,7 +76,7 @@ public class JSONParser {
         return stacksList;
     }
 
-    public ArrayList<Vehicle> parseVehicles() {
+    public ArrayList<Vehicle> parseVehicles(OutputWriter outputWriter) {
         ArrayList<Vehicle> vehiclesList = new ArrayList<>();
         JSONArray vehicles = jsonData.getJSONArray("vehicles");
         int vehicleSpeed = jsonData.getInt("vehiclespeed");
@@ -91,7 +92,7 @@ public class JSONParser {
             int vehicleY =  vehicleData.getInt("yCoordinate");
             Location vehicleLocation = new Location(vehicleX,vehicleY);
 
-            vehiclesList.add(new Vehicle(vehicleId, vehicleLocation, vehicleSpeed, vehicleCapacity, vehicleName, loadingDuration));
+            vehiclesList.add(new Vehicle(vehicleId, vehicleLocation, vehicleSpeed, vehicleCapacity, vehicleName, loadingDuration, outputWriter));
         }
 
         return vehiclesList;

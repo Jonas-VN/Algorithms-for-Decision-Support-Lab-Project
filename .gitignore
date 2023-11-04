@@ -1,2 +1,5 @@
 out/
 .idea/
+
+# output files
+src/Output/src/

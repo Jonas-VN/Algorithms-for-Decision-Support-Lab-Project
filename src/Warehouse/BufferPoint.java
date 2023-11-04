@@ -46,4 +46,14 @@ public class BufferPoint extends Storage  {
         return this.boxes.contains(box);
     }
 
+    @Override
+    public boolean canRemoveBox(Box box) {
+        return this.contains(box);
+    }
+
+    @Override
+    public Box getTopBox() {
+        return null;
+    }
+
 }

@@ -21,11 +21,11 @@ public class OutputWriter {
 
     public void writeLine(Vehicle vehicle, Request request, int endTime, Operation operation) {
         String line = (vehicle.getName() + ";" +
-                request.getPickup().getLocation().getX() + ";" +
-                request.getPickup().getLocation().getY() + ";" +
+                request.getVehicleStartLocation().getX() + ";" +
+                request.getVehicleStartLocation().getY() + ";" +
                 request.getStartTime() + ";" +
-                request.getDestination().getLocation().getX() + ";" +
-                request.getDestination().getLocation().getY() + ";" +
+                vehicle.getLocation().getX() + ";" +
+                vehicle.getLocation().getY() + ";" +
                 endTime + ";" +
                 request.getBox().getId() + ";" +
                 operation);

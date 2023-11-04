@@ -1,12 +1,15 @@
 package Warehouse;
 
 
+import Utils.Location;
+
 public class Request {
     private final int id;
     private final Storage pickup;
     private final Storage destination;
     private final Box box;
     private int startTime = 0;
+    private Location vehicleStartLocation = null;
 
     public Request(int id, Storage pickup, Storage destination, Box box){
         this.id = id;
@@ -21,6 +24,14 @@ public class Request {
 
     public int getStartTime() {
         return startTime;
+    }
+
+    public void setVehicleStartLocation(Location vehicleStartLocation) {
+        this.vehicleStartLocation = vehicleStartLocation;
+    }
+
+    public Location getVehicleStartLocation() {
+        return vehicleStartLocation;
     }
 
     public int getId() {

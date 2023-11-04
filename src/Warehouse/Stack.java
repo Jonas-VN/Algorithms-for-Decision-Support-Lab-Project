@@ -1,6 +1,7 @@
 package Warehouse;
 
 import Utils.Location;
+import Warehouse.Exceptions.BoxNotAccessibleException;
 
 public class Stack extends Storage {
     private final java.util.Stack<Box> boxes = new java.util.Stack<>();
@@ -34,17 +35,28 @@ public class Stack extends Storage {
     }
 
     @Override
-    public void removeBox(Box box) {
+    public void removeBox(Box box) throws BoxNotAccessibleException {
         Box removedBox = this.boxes.pop();
         if (removedBox != box) {
-            System.out.println("ERROR: Box " + box.getId() + " != " + removedBox.getId() + "! RemovedBox was probably not on top of the stack...");
+            throw new BoxNotAccessibleException("Box " + box.getId() + " != " + removedBox.getId() + "! RemovedBox was probably not on top of the stack...");
+            // System.out.println("ERROR: Box " + box.getId() + " != " + removedBox.getId() + "! RemovedBox was probably not on top of the stack...");
         }
-        assert removedBox == box : "Box " + box.getId() + " != " + removedBox.getId() + "! RemovedBox was probably not on top of the stack...";
+        // assert removedBox == box : "Box " + box.getId() + " != " + removedBox.getId() + "! RemovedBox was probably not on top of the stack...";
         box.setStack(null);
     }
 
     @Override
     public boolean contains(Box box) {
         return this.boxes.contains(box);
+    }
+
+    @Override
+    public boolean canRemoveBox(Box box) {
+        return this.boxes.peek() == box;
+    }
+
+    @Override
+    public Box getTopBox() {
+        return this.boxes.peek();
     }
 }

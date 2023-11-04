@@ -1,6 +1,7 @@
 package Warehouse;
 
 import Utils.Location;
+import Warehouse.Exceptions.BoxNotAccessibleException;
 
 public abstract class Storage {
     private final int id;
@@ -32,8 +33,12 @@ public abstract class Storage {
 
     public abstract void addBox(Box box);
 
-    public abstract void removeBox(Box box);
+    public abstract void removeBox(Box box) throws BoxNotAccessibleException;
 
     public abstract boolean contains(Box box);
+
+    public abstract boolean canRemoveBox(Box box);
+
+    public abstract Box getTopBox();
 }
 

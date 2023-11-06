@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class JSONParser {
     JSONObject jsonData;
@@ -40,7 +41,7 @@ public class JSONParser {
             int bufferPointX = bufferPointData.getInt("x");
             int bufferPointY = bufferPointData.getInt("y");
             Location bufferPointLocation = new Location(bufferPointX,bufferPointY);
-            ArrayList<Box> bufferPointBoxes = new ArrayList<>();
+            HashMap<String, Box> bufferPointBoxes = new HashMap<>();
             bufferPointsList.add(new BufferPoint(bufferPointId, bufferPointLocation, Integer.MAX_VALUE, bufferPointName, bufferPointBoxes));
         }
 

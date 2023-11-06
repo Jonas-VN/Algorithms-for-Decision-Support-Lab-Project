@@ -3,10 +3,11 @@ package Warehouse;
 import Utils.Location;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class BufferPoint extends Storage  {
-    private final ArrayList<Box> boxes;
-    public BufferPoint(int id, Location location, int capacity, String name, ArrayList<Box> boxes) {
+    private final HashMap<String, Box> boxes;
+    public BufferPoint(int id, Location location, int capacity, String name, HashMap<String, Box> boxes) {
         super(id, location, capacity, name);
         this.boxes = boxes;
     }
@@ -23,27 +24,24 @@ public class BufferPoint extends Storage  {
 
     @Override
     public Box findBoxById(String Id) {
-        for (Box box : this.boxes) {
-            if (box.getId().equals(Id)) return box;
-        }
-        return null;
+        return this.boxes.get(Id);
     }
 
     @Override
     public void addBox(Box box) {
-        this.boxes.add(box);
+        this.boxes.put(box.getId(), box);
         box.setStack(this);
     }
 
     @Override
     public void removeBox(Box box) {
-        this.boxes.remove(box);
+        this.boxes.remove(box.getId());
         box.setStack(null);
     }
 
     @Override
     public boolean contains(Box box) {
-        return this.boxes.contains(box);
+        return this.boxes.containsKey(box.getId());
     }
 
     @Override

@@ -80,9 +80,8 @@ public class Warehouse {
                 if (request.getPickup().canRemoveBox(request.getBox())) {
                     // The box is accessible
                     this.requests.remove(request);
-                    vehicle.addRequest(request);
-                    vehicle.startNextLoadingRequest(clock.getTime());
-                    int timeToFinishState = vehicle.getLocation().manhattanDistance(vehicle.getCurrentRequest().getPickup().getLocation()) / vehicle.getSpeed();
+                    vehicle.addRequest(request, clock.getTime());
+                    int timeToFinishState = vehicle.getLocation().manhattanDistance(vehicle.currentRequest().getPickup().getLocation()) / vehicle.getSpeed();
                     vehicle.initNextState(VehicleState.MOVING_TO_PICKUP, timeToFinishState);
                     return;
                 }

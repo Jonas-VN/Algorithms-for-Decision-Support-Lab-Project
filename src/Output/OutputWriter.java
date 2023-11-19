@@ -1,7 +1,5 @@
 package Output;
 
-import Utils.Location;
-import Warehouse.Box;
 import Warehouse.Operation;
 import Warehouse.Request;
 import Warehouse.Vehicle;
@@ -20,7 +18,7 @@ public class OutputWriter {
     }
 
     public void writeLine(Vehicle vehicle, int endTime, Operation operation) {
-        Request request = vehicle.getCurrentRequest();
+        Request request = vehicle.currentRequest();
         String line = (vehicle.getName() + ";" +
                 request.getVehicleStartLocation().getX() + ";" +
                 request.getVehicleStartLocation().getY() + ";" +

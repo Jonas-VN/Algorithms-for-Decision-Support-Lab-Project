@@ -19,6 +19,14 @@ public abstract class Storage {
         this.name = name;
     }
 
+    public int getId() {
+        return id;
+    }
+
+    public int getUsedByVehicle() {
+        return vehicleId;
+    }
+
     public abstract int getFreeSpaces();
 
     public abstract int numberOfBoxesOnTop(Box box);

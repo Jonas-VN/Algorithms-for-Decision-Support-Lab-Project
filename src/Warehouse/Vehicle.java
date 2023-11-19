@@ -52,9 +52,9 @@ public class Vehicle {
 
     public void addRequest(Request request, int time) throws StackIsFullException {
         if (this.requests.size() >= this.capacity) throw new StackIsFullException("Vehicle " + this.id + " is full.");
+        request.setStartTime(time);
+        request.setVehicleStartLocation(this.location);
         this.requests.push(request);
-        this.currentRequest().setStartTime(time);
-        this.currentRequest().setVehicleStartLocation(this.location);
     }
 
     public Request currentRequest(){
@@ -86,28 +86,22 @@ public class Vehicle {
     }
 
     public void loadBox(Box box) throws BoxNotAccessibleException, StackIsFullException {
-        if (!this.isFull()) {
-            box.getStack().removeBox(box);
-            this.stack.addBox(box);
-            box.setStack(this.stack);
-        }
-        else {
-            throw new StackIsFullException("Vehicle " + this.id + " is full!");
-        }
+        if (this.isFull()) throw new StackIsFullException("Vehicle " + this.id + " is full!");
+
         // The box has been loaded, so the stack is free again
         box.getStack().resetUsedByVehicle();
+        box.getStack().removeBox(box);
+        this.stack.addBox(box);
+        box.setStack(this.stack);
     }
 
     public void unloadBox(Box box, Storage storage) throws BoxNotAccessibleException, StackIsFullException {
-        if (this.stack.contains(box)){
-            this.stack.removeBox(box);
-            storage.addBox(box);
-        }
-        else {
-            throw new BoxNotAccessibleException("Vehicle " + this.id + " does not contain box " + box.getId() + "!");
-        }
+        if (!this.stack.contains(box)) throw new BoxNotAccessibleException("Vehicle " + this.id + " does not contain box " + box.getId() + "!");
+
         // The box has been unloaded, so the storage is free again
         storage.resetUsedByVehicle();
+        this.stack.removeBox(box);
+        storage.addBox(box);
     }
 
     public void unload(int time) throws BoxNotAccessibleException, StackIsFullException {
@@ -136,6 +130,7 @@ public class Vehicle {
             // Vehicle finished loading
             this.loadBox(this.currentRequest().getBox());
             this.outputWriter.writeLine(this, time, Operation.LOAD);
+
 
             if (this.isFull() || this.doneAllRequests()) {
                 // Vehicle is full -> start moving to delivery

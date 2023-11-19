@@ -49,7 +49,6 @@ public class Warehouse {
 
                                 // Requests are empty but the vehicle isn't full yet -> we have done everything we could
                                 if (requests.isEmpty()) vehicle.setDoneAllRequests(true);
-
                             }
                         }
                     }
@@ -61,7 +60,9 @@ public class Warehouse {
                 }
 
                 // Vehicle didn't find a request to do
-                if (vehicle.getState() == VehicleState.IDLE) numberOfVehiclesIdle++;
+                if (vehicle.getState() == VehicleState.IDLE) {
+                    numberOfVehiclesIdle++;
+                }
             }
             clock.tick();
 
@@ -75,19 +76,20 @@ public class Warehouse {
 
         // Priority 1: Requests that are accessible
         for (Request request : this.requests) {
+            Storage pickup = request.getPickup();
             // If the stack is free && the box is still in that stack (if this is not the case it means that the relocation should still be undone)
-            if (request.getPickup().canBeUsedByVehicle(vehicle.getId()) && request.getPickup().contains(request.getBox())) {
-                if (request.getPickup().canRemoveBox(request.getBox())) {
+            if (pickup.canBeUsedByVehicle(vehicle.getId()) && pickup.contains(request.getBox())) {
+                if (pickup.canRemoveBox(request.getBox())) {
                     // The box is accessible
                     this.requests.remove(request);
                     vehicle.addRequest(request, clock.getTime());
-                    int timeToFinishState = vehicle.getLocation().manhattanDistance(vehicle.currentRequest().getPickup().getLocation()) / vehicle.getSpeed();
+                    int timeToFinishState = vehicle.getLocation().manhattanDistance(pickup.getLocation()) / vehicle.getSpeed();
                     vehicle.initNextState(VehicleState.MOVING_TO_PICKUP, timeToFinishState);
                     return;
                 }
             }
         }
-
+        // TODO: Relocations
         // Priority 2: Requests that are not accessible but can be made accessible by relocating a box and it fits in the vehicle
 //        for (Request request : this.requests) {
 //            if (vehicle.getStack().getFreeSpaces() >= request.getPickup().numberOfBoxesOnTop(request.getBox()) + 1) {

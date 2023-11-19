@@ -28,6 +28,7 @@ public class Stack extends Storage {
 
     @Override
     public boolean canBeUsedByVehicle(int vehicleId) {
+        // Not in use OR used by the same vehicle (give priority to the vehicle that is already using this stack)
         return this.vehicleId == -1 || this.vehicleId == vehicleId;
     }
 

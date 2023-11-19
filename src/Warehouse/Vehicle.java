@@ -3,6 +3,7 @@ package Warehouse;
 import Output.OutputWriter;
 import Utils.Location;
 import Warehouse.Exceptions.BoxNotAccessibleException;
+import Warehouse.Exceptions.StackIsFullException;
 
 import java.util.ArrayList;
 
@@ -13,12 +14,14 @@ public class Vehicle {
     private final int capacity;
     private final String name;
     private final int loadingDuration;
-    private final Stack boxes;
+    private final Stack stack;
     private final ArrayList<Request> queue = new ArrayList<>();
     private int queueIndex = 0;
     private VehicleState state = VehicleState.IDLE;
     private int timeToFinishState = 0;
     private final OutputWriter outputWriter;
+    private final ArrayList<Request> undoRelocationRequests = new ArrayList<>();
+    private boolean doneAllRequests = false;
 
     public Vehicle(int id, Location location, int speed, int capacity, String name, int loadingDuration, OutputWriter outputWriter){
         this.id = id;
@@ -27,7 +30,7 @@ public class Vehicle {
         this.capacity = capacity;
         this.name = name;
         this.loadingDuration = loadingDuration;
-        this.boxes = new Stack(-1, null, capacity, "Vehicle " + id);
+        this.stack = new Stack(-1, null, capacity, "Vehicle " + id);
         this.outputWriter = outputWriter;
     }
 
@@ -36,29 +39,22 @@ public class Vehicle {
         this.queueIndex = 0;
     }
 
-    public void setTimeToFinishState(int timeToFinish) {
-        this.timeToFinishState = timeToFinish;
+    public void initNextState(VehicleState vehicleState, int timeToFinishState) {
+        this.state = vehicleState;
+        this.timeToFinishState = timeToFinishState;
     }
 
     public int getAndDecrementTimeToFinishState() {
         return this.timeToFinishState--;
     }
 
-    public int getLoadingDuration() {
-        return this.loadingDuration;
-    }
-
-    public void setState(VehicleState state) {
-        this.state = state;
-    }
-
     public VehicleState getState() {
         return this.state;
     }
 
-    public boolean addRequest(Request request){
-        if (this.queue.size() >= this.capacity) return false;
-        return this.queue.add(request);
+    public void addRequest(Request request) throws StackIsFullException {
+        if (this.queue.size() >= this.capacity) throw new StackIsFullException("Vehicle " + this.id + " is full.");
+        else this.queue.add(request);
     }
 
     public Request getCurrentRequest(){
@@ -74,11 +70,11 @@ public class Vehicle {
     }
 
     public boolean isFull(){
-        return this.boxes.isFull();
+        return this.stack.isFull();
     }
 
     public boolean isEmpty(){
-        return this.boxes.isEmpty();
+        return this.stack.isEmpty();
     }
 
     public Location getLocation(){
@@ -89,117 +85,106 @@ public class Vehicle {
         return this.speed;
     }
 
-    public void loadBox(Box box) throws BoxNotAccessibleException {
+    public void loadBox(Box box) throws BoxNotAccessibleException, StackIsFullException {
         if (!this.isFull()) {
             box.getStack().removeBox(box);
-            this.boxes.addBox(box);
-            box.setStack(this.boxes);
-            System.out.println("Vehicle " + this.id + " loaded box " + box.getId() + ".");
+            this.stack.addBox(box);
+            box.setStack(this.stack);
         }
         else {
-            System.out.println("Vehicle " + this.id + " is full.");
+            throw new StackIsFullException("Vehicle " + this.id + " is full!");
         }
+        // The box has been loaded, so the stack is free again
+        box.getStack().resetUsedByVehicle();
     }
 
-    public void unloadBox(Box box, Storage storage) throws BoxNotAccessibleException {
-        if (this.boxes.contains(box)){
-            this.boxes.removeBox(box);
+    public void unloadBox(Box box, Storage storage) throws BoxNotAccessibleException, StackIsFullException {
+        if (this.stack.contains(box)){
+            this.stack.removeBox(box);
             storage.addBox(box);
-            System.out.println("Vehicle " + this.id + " has unloaded box " + box.getId() + ".");
         }
         else {
-            System.out.println("Vehicle " + this.id + " does not contain box " + box.getId() + ".");
+            throw new BoxNotAccessibleException("Vehicle " + this.id + " does not contain box " + box.getId() + "!");
         }
+        // The box has been unloaded, so the storage is free again
+        storage.resetUsedByVehicle();
     }
 
-    public void moveTo(Location location){
-        this.location = location;
-    }
-
-    public void unload(int time) {
+    public void unload(int time) throws BoxNotAccessibleException, StackIsFullException {
         if (this.getAndDecrementTimeToFinishState() == 0) {
             // Vehicle finished unloading
-            try {
-                this.unloadBox(this.getCurrentRequest().getBox(), this.getCurrentRequest().getDestination());
-            }
-            catch (BoxNotAccessibleException exception) {
-                // TODO: Need relocations
-                System.out.println("ERROR: Box " + this.getCurrentRequest().getBox().getId() + " is not accessible in " + this.getCurrentRequest().getDestination().getName() + "!");
-            }
-            this.outputWriter.writeLine(this, this.getCurrentRequest(), time, Operation.UNLOAD);
-            // Clock.skipNextTick();
+            this.unloadBox(this.getCurrentRequest().getBox(), this.getCurrentRequest().getDestination());
+            this.outputWriter.writeLine(this, time, Operation.UNLOAD);
+
             if (this.isEmpty()) {
-                // Vehicle is empty -> set to idle
+                // Vehicle is empty -> set to idle (let the warehouse decide what to do next)
                 this.state = VehicleState.IDLE;
             }
             else {
                 // Vehicle is not empty -> start moving to next delivery
-                this.startNextUnloadingRequest();
-                this.getCurrentRequest().setStartTime(time);
-                this.getCurrentRequest().setVehicleStartLocation(this.location);
-                this.state = VehicleState.MOVING_TO_DELIVERY;
-                this.timeToFinishState = this.location.manhattenDistance(this.getCurrentRequest().getDestination().getLocation()) * this.speed;
+                this.startNextUnloadingRequest(time);
+                int timeToFinishState = this.location.manhattanDistance(this.getCurrentRequest().getDestination().getLocation()) / this.speed;
+                this.initNextState(VehicleState.MOVING_TO_DELIVERY, timeToFinishState);
                 this.moveToDelivery(time);
-            }
-        }
-    }
-    public void load(int time) {
-        if (this.getAndDecrementTimeToFinishState() == 0) {
-            // Vehicle finished loading
-            try {
-                this.loadBox(this.getCurrentRequest().getBox());
-            }
-            catch (BoxNotAccessibleException exception) {
-                System.out.println("ERROR: Box " + this.getCurrentRequest().getBox().getId() + " is not accessible in " + this.getCurrentRequest().getPickup().getName() + "!");
-            }
-            this.outputWriter.writeLine(this, this.getCurrentRequest(), time, Operation.LOAD);
-            // Clock.skipNextTick();
-            if (this.isFull() || this.doneAllRequests()) {
-                // Vehicle is full -> start moving to delivery
-                this.state = VehicleState.MOVING_TO_DELIVERY;
-                this.getCurrentRequest().setStartTime(time);
-                this.getCurrentRequest().setVehicleStartLocation(this.location);
-                this.timeToFinishState = this.location.manhattenDistance(this.getCurrentRequest().getDestination().getLocation()) * this.speed;
-                this.moveToDelivery(time);
-            }
-            else {
-                // Vehicle is not full -> start moving to next pickup request
-                this.startNextLoadingRequest();
-                this.getCurrentRequest().setStartTime(time);
-                this.getCurrentRequest().setVehicleStartLocation(this.location);
-                this.state = VehicleState.MOVING_TO_PICKUP;
-                this.timeToFinishState = this.location.manhattenDistance(this.getCurrentRequest().getPickup().getLocation()) * this.speed;
-                this.moveToPickup(time);
             }
         }
     }
 
-    public void moveToDelivery(int time) {
-        // If the vehicle arrived at the delivery OR already was at the delivery
-        if (this.getAndDecrementTimeToFinishState() == 0 || this.location.equals(this.getCurrentRequest().getDestination().getLocation())) {
+    public boolean load(int time) throws BoxNotAccessibleException, StackIsFullException {
+        if (this.getAndDecrementTimeToFinishState() == 0) {
+            // Vehicle finished loading
+            this.loadBox(this.getCurrentRequest().getBox());
+            this.outputWriter.writeLine(this, time, Operation.LOAD);
+
+            if (this.isFull() || this.doneAllRequests()) {
+                // Vehicle is full -> start moving to delivery
+                this.startCurrentRequest(time);
+                int timeToFinishState = this.location.manhattanDistance(this.getCurrentRequest().getDestination().getLocation()) / this.speed;
+                this.initNextState(VehicleState.MOVING_TO_DELIVERY, timeToFinishState);
+                this.moveToDelivery(time);
+            }
+            // Else the vehicle is not done yet, let the warehouse decide what to do next
+            return true;
+        }
+        return false;
+    }
+
+    public void moveToDelivery(int time) throws BoxNotAccessibleException, StackIsFullException {
+        if (this.canStartUnloading()) {
             // Vehicle arrived at delivery -> start unloading
-            this.state = VehicleState.UNLOADING;
-            this.timeToFinishState = this.loadingDuration;
             this.location = this.getCurrentRequest().getDestination().getLocation();
-            // clock.skipNextTick();
+            this.initNextState(VehicleState.UNLOADING, this.loadingDuration);
+            this.getCurrentRequest().getDestination().setUsedByVehicle(this.id);
             this.unload(time);
         }
     }
 
-    public void moveToPickup(int time) {
-        // If the vehicle arrived at the pickup OR already was at the pickup
-        if (this.getAndDecrementTimeToFinishState() == 0 || this.location.equals(this.getCurrentRequest().getPickup().getLocation())) {
+    private boolean canStartUnloading() {
+        // (We have arrived at the delivery location OR we were already there) AND the delivery location is free
+        boolean timeIsUp = this.getAndDecrementTimeToFinishState() <= 0;
+        boolean locationIsSame = this.location.equals(this.getCurrentRequest().getDestination().getLocation());
+        boolean canBeUsedByVehicle = this.getCurrentRequest().getDestination().canBeUsedByVehicle(this.id);
+        return (timeIsUp || locationIsSame) && canBeUsedByVehicle;
+    }
+
+    public void moveToPickup(int time) throws BoxNotAccessibleException, StackIsFullException {
+        if (this.canStartLoading()) {
             // Vehicle arrived at pickup -> start loading
-            this.state = VehicleState.LOADING;
-            this.timeToFinishState = this.loadingDuration;
             this.location = this.getCurrentRequest().getPickup().getLocation();
-            // clock.skipNextTick();
+            this.initNextState(VehicleState.LOADING, this.loadingDuration);
+            this.getCurrentRequest().getPickup().setUsedByVehicle(this.id);
             this.load(time);
+            // IDK why, but it works
+            getAndDecrementTimeToFinishState();
         }
     }
 
-    public void idle(int time) {
-        this.clearRequests();
+    private boolean canStartLoading() {
+        // (We have arrived at the pickup location OR we were already there) AND the pickup location is free
+        boolean timeIsUp = this.getAndDecrementTimeToFinishState() <= 0;
+        boolean locationIsSame = this.location.equals(this.getCurrentRequest().getPickup().getLocation());
+        boolean canBeUsedByVehicle = this.getCurrentRequest().getPickup().canBeUsedByVehicle(this.id);
+        return (timeIsUp || locationIsSame) && canBeUsedByVehicle;
     }
 
     @Override
@@ -209,22 +194,33 @@ public class Vehicle {
                 ", location=" + this.location +
                 ", speed=" + this.speed +
                 ", capacity=" + this.capacity +
-                ", boxes=" + this.boxes +
+                ", boxes=" + this.stack +
                 ", name='" + this.name + '\'' +
                 ", loadingDuration=" + this.loadingDuration +
                 '}';
     }
 
-    public void startNextLoadingRequest() {
-        this.queueIndex = Math.min(this.queueIndex + 1, this.queue.size() - 1);
+    public void startCurrentRequest(int time) {
+        this.getCurrentRequest().setStartTime(time);
+        this.getCurrentRequest().setVehicleStartLocation(this.location);
     }
 
-    public void startNextUnloadingRequest() {
+    public void startNextLoadingRequest(int time) {
+        this.queueIndex = Math.min(this.queueIndex + 1, this.queue.size() - 1);
+        this.startCurrentRequest(time);
+    }
+
+    public void startNextUnloadingRequest(int time) {
         this.queueIndex = Math.max(this.queueIndex - 1, 0);
+        this.startCurrentRequest(time);
+    }
+
+    public void setDoneAllRequests(boolean doneAllRequests) {
+        this.doneAllRequests = doneAllRequests || this.queueIndex == this.queue.size() - 1;
     }
 
     public boolean doneAllRequests() {
-        return this.queueIndex == this.queue.size() - 1;
+        return this.doneAllRequests;
     }
 }
 

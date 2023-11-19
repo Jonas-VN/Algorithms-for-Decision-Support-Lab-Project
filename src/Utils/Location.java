@@ -17,7 +17,7 @@ public class Location {
         return y;
     }
     
-    public int manhattenDistance(Location other) {
+    public int manhattanDistance(Location other) {
     	int dx = this.x - other.x;
     	int dy = this.y - other.y;
     	return Math.abs(dx) + Math.abs(dy);

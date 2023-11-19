@@ -13,6 +13,18 @@ public class BufferPoint extends Storage  {
     }
 
     @Override
+    public int getFreeSpaces() {
+        // BufferPoint has no limit
+        return Integer.MAX_VALUE;
+    }
+
+    @Override
+    public int numberOfBoxesOnTop(Box box) {
+        // Boxes are always accessible in the BufferPoint
+        return 0;
+    }
+
+    @Override
     public boolean isFull() {
         return this.boxes.size() == this.capacity;
     }
@@ -50,8 +62,14 @@ public class BufferPoint extends Storage  {
     }
 
     @Override
-    public Box getTopBox() {
+    public Box peek() {
         return null;
+    }
+
+    @Override
+    public boolean canBeUsedByVehicle(int vehicleId) {
+        // BufferPoint can always be used by any vehicle
+        return true;
     }
 
 }

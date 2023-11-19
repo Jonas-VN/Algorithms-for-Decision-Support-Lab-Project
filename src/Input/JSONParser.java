@@ -3,6 +3,7 @@ package Input;
 import Output.OutputWriter;
 import Utils.Location;
 import Warehouse.*;
+import Warehouse.Exceptions.StackIsFullException;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -48,7 +49,7 @@ public class JSONParser {
         return bufferPointsList;
     }
 
-    public ArrayList<Stack> parseStacks() {
+    public ArrayList<Stack> parseStacks() throws StackIsFullException {
         ArrayList<Stack> stacksList = new ArrayList<>();
         JSONArray stacks = jsonData.getJSONArray("stacks");
         int stackCapacity = jsonData.getInt("stackcapacity");
@@ -99,7 +100,7 @@ public class JSONParser {
         return vehiclesList;
     }
 
-    public ArrayList<Request> parseRequests(ArrayList<Storage> stacks) {
+    public ArrayList<Request> parseRequests(ArrayList<Storage> stacks) throws StackIsFullException {
         ArrayList<Request> requestsList = new ArrayList<>();
         JSONArray requests = jsonData.getJSONArray("requests");
 
@@ -121,7 +122,6 @@ public class JSONParser {
                 // Box wasn't found in the pickup stack, so it must be in the BufferPoint
                 pickupLocationStack.addBox(pickupBox = new Box(boxIdStack));
                 pickupBox.setStack(pickupLocationStack);
-                System.out.println(pickupBox);
             }
 
             requestsList.add(new Request(requestId, pickupLocationStack, placeLocationStack, pickupBox));

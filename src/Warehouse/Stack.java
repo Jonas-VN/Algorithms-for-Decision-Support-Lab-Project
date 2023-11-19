@@ -2,12 +2,33 @@ package Warehouse;
 
 import Utils.Location;
 import Warehouse.Exceptions.BoxNotAccessibleException;
+import Warehouse.Exceptions.StackIsFullException;
 
 public class Stack extends Storage {
     private final java.util.Stack<Box> boxes = new java.util.Stack<>();
 
     public Stack(int id, Location location, int capacity, String name) {
         super(id, location, capacity, name);
+    }
+
+    @Override
+    public int getFreeSpaces() {
+        return this.capacity - this.boxes.size();
+    }
+
+    @Override
+    public int numberOfBoxesOnTop(Box box) {
+        int count = 0;
+        for (int i = this.boxes.size() - 1; i >= 0; i--) {
+            if (this.boxes.get(i) == box) break;
+            count++;
+        }
+        return count;
+    }
+
+    @Override
+    public boolean canBeUsedByVehicle(int vehicleId) {
+        return this.vehicleId == -1 || this.vehicleId == vehicleId;
     }
 
     @Override
@@ -29,19 +50,21 @@ public class Stack extends Storage {
     }
 
     @Override
-    public void addBox(Box box) {
+    public void addBox(Box box) throws StackIsFullException {
+        if (this.isFull()) {
+            throw new StackIsFullException("Stack is full!");
+        }
         this.boxes.push(box);
         box.setStack(this);
     }
 
     @Override
     public void removeBox(Box box) throws BoxNotAccessibleException {
-        Box removedBox = this.boxes.pop();
+        Box removedBox = this.boxes.peek();
         if (removedBox != box) {
             throw new BoxNotAccessibleException("Box " + box.getId() + " != " + removedBox.getId() + "! RemovedBox was probably not on top of the stack...");
-            // System.out.println("ERROR: Box " + box.getId() + " != " + removedBox.getId() + "! RemovedBox was probably not on top of the stack...");
         }
-        // assert removedBox == box : "Box " + box.getId() + " != " + removedBox.getId() + "! RemovedBox was probably not on top of the stack...";
+        this.boxes.pop();
         box.setStack(null);
     }
 
@@ -56,7 +79,7 @@ public class Stack extends Storage {
     }
 
     @Override
-    public Box getTopBox() {
+    public Box peek() {
         return this.boxes.peek();
     }
 }

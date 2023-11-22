@@ -15,6 +15,7 @@ public class Warehouse {
     private final ArrayList<Storage> storages;
     private final ArrayList<Vehicle> vehicles;
     private final ArrayList<Request> requests;
+    private final ArrayList<Box> usedBoxes = new ArrayList<>();
 
     public Warehouse(String problem) throws IOException, StackIsFullException {
         JSONParser parser = new JSONParser(new File("src/Input/src/I" + problem + ".json"));
@@ -23,6 +24,9 @@ public class Warehouse {
         OutputWriter outputWriter = new OutputWriter(new File("src/Output/src/output" + problem + ".txt"));
         this.vehicles = parser.parseVehicles(outputWriter);
         this.requests = parser.parseRequests(storages);
+        for (Request request : requests) {
+            this.usedBoxes.add(request.getBox());
+        }
         this.clock = new Clock();
     }
 
@@ -94,28 +98,60 @@ public class Warehouse {
     private Request findNextRequest(Vehicle vehicle) {
         this.requests.sort((request1, request2) -> Request.compareTo(request1, request2, vehicle));
 
-        // Priority 1: Requests that are accessible
         for (Request request : this.requests) {
             Storage pickup = request.getPickup();
             // If the stack is free && the box is still in that stack (if this is not the case it means that the relocation should still be undone)
-            if (pickup.canBeUsedByVehicle(vehicle.getId()) && pickup.contains(request.getBox())) {
+            if (pickup.canBeUsedByVehicle(vehicle.getId())) {
                 if (pickup.canRemoveBox(request.getBox())) {
                     // The box is accessible
                     this.requests.remove(request);
                     return request;
                 }
             }
+//            else {
+//                // Do a relocation
+//                vehicle.setIsRelocating(true);
+//                Box box = request.getBox();
+//                int numberOfRelocationsNeeded = Math.min(pickup.numberOfBoxesOnTop(box), vehicle.numberOfFreeSpaces());
+//                Storage relocationStorage = this.getRelocationStorage(vehicle, pickup, numberOfRelocationsNeeded);
+//                vehicle.setRequestThatCausedRelocation(request);
+//                if (usedBoxes.contains(box)) {
+//                    // We need to undo the relocation
+//                    vehicle.addRequestToBeUndone(new Request(-1, relocationStorage, pickup, box));
+//                }
+//                // We can just move it to the relocation storage
+//                return new Request(-1, pickup, relocationStorage, box);
+//            }
         }
-        return null;
+        Request request = this.requests.get(0);
+        Storage pickup = request.getPickup();
+        // If the stack is free && the box is still in that stack (if this is not the case it means that the relocation should still be undone)
+        // Do a relocation
+        vehicle.setIsRelocating(true);
+        Box box = request.getBox();
+        int numberOfRelocationsNeeded = Math.min(pickup.numberOfBoxesOnTop(box), vehicle.numberOfFreeSpaces());
+        Storage relocationStorage = this.getRelocationStorage(vehicle, pickup, numberOfRelocationsNeeded);
+        vehicle.setRequestThatCausedRelocation(request);
+        if (usedBoxes.contains(box)) {
+            // We need to undo the relocation
+            vehicle.addRequestToBeUndone(new Request(-1, relocationStorage, pickup, box));
+        }
+        // We can just move it to the relocation storage
+        return new Request(-1, pickup, relocationStorage, box);
+
     }
+
 
 
 
     private Storage getRelocationStorage(Vehicle vehicle, Storage storage, int numberOfRelocationsNeeded) {
         this.storages.sort((storage1, storage2) -> Storage.compareByLocationBox(storage1, storage2, storage));
         for (Storage relocationStorage : storages) {
-            // IF the storage is free      && not full                    && not the same storage         && has enough free spaces             && is a stack
-            if (relocationStorage.canBeUsedByVehicle(vehicle.getId()) && !relocationStorage.isFull() && relocationStorage != storage && storage.getFreeSpaces() >= numberOfRelocationsNeeded && relocationStorage instanceof Stack) {
+            if (relocationStorage.canBeUsedByVehicle(vehicle.getId()) &&
+                    !relocationStorage.isFull() &&
+                    relocationStorage != storage &&
+                    storage.getFreeSpaces() >= numberOfRelocationsNeeded &&
+                    relocationStorage instanceof Stack) {
                 return relocationStorage;
             }
         }

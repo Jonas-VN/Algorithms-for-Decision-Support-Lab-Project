@@ -63,7 +63,7 @@ public class Stack extends Storage {
     public void removeBox(Box box) throws BoxNotAccessibleException {
         Box removedBox = this.boxes.peek();
         if (removedBox != box) {
-            throw new BoxNotAccessibleException("Box " + box.getId() + " != " + removedBox.getId() + "! RemovedBox was probably not on top of the stack...");
+            throw new BoxNotAccessibleException("Tried removing Box " + box.getId() + "! Box was probably not on top of the stack...");
         }
         this.boxes.pop();
         box.setStack(null);

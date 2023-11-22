@@ -21,6 +21,11 @@ public class Vehicle {
     private int timeToFinishState = 0;
     private final OutputWriter outputWriter;
     private boolean doneAllRequests = false;
+    private int timeOffset = 0;
+    private final ArrayList<Request> requestsToBeUndone = new ArrayList<>();
+    private boolean isRelocating = false;
+    private Location returnAfterRelocation;
+    private Request requestThatCausedRelocation;
 
     public Vehicle(int id, Location location, int speed, int capacity, String name, int loadingDuration, OutputWriter outputWriter){
         this.id = id;
@@ -37,9 +42,26 @@ public class Vehicle {
         return currentRequest;
     }
 
+    public void setRequestThatCausedRelocation(Request requestThatCausedRelocation) {
+        this.requestThatCausedRelocation = requestThatCausedRelocation;
+    }
+
+    public void setIsRelocating(boolean isRelocating){
+        this.isRelocating = isRelocating;
+    }
+
+    public boolean isRelocation() {
+        return this.isRelocating;
+    }
+
+    public void addRequestToBeUndone(Request request){
+        this.requestsToBeUndone.add(request);
+    }
+
     public void initNextState(VehicleState vehicleState, int timeToFinishState) {
         this.state = vehicleState;
-        this.timeToFinishState = timeToFinishState;
+        this.timeToFinishState = timeToFinishState - timeOffset;
+        timeOffset = 0;
     }
 
     public int getAndDecrementTimeToFinishState() {
@@ -51,11 +73,15 @@ public class Vehicle {
     }
 
     public void addRequest(Request request, int time) throws StackIsFullException {
-        if (this.requests.size() >= this.capacity) throw new StackIsFullException("Vehicle " + this.id + " is full.");
+        if (this.requests.size() > this.capacity) throw new StackIsFullException("Vehicle " + this.id + " is full.");
         request.setStartTime(time);
         request.setVehicleStartLocation(this.location);
         this.currentRequest = request;
         this.requests.add(request);
+    }
+
+    public int numberOfFreeSpaces(){
+        return this.capacity - this.stack.size();
     }
 
     public Request currentRequest(){
@@ -113,22 +139,26 @@ public class Vehicle {
             this.requests.remove(this.currentRequest);
             // TODO: implement some logic to make it more efficient
             if (this.requests.isEmpty()) {
+                if (this.isRelocating) {
+                    this.isRelocating = false;
+                    // Move back to the original location
+                    this.requests.add(this.requestThatCausedRelocation);
+                    this.requestThatCausedRelocation = null;
+                    int timeToFinishState = this.location.manhattanDistance(this.returnAfterRelocation) / this.speed;
+                    this.initNextState(VehicleState.MOVING_TO_PICKUP, timeToFinishState);
+                    this.moveToPickup(time);
+                    return;
+                }
                 this.state = VehicleState.IDLE;
                 return;
             }
             this.currentRequest = this.requests.get(0);
+            // Vehicle is not empty -> start moving to next delivery
+            this.initCurrentRequest(time);
+            int timeToFinishState = this.location.manhattanDistance(this.currentRequest().getDestination().getLocation()) / this.speed;
+            this.initNextState(VehicleState.MOVING_TO_DELIVERY, timeToFinishState);
+            this.moveToDelivery(time);
 
-            if (this.isEmpty()) {
-                // Vehicle is empty -> set to idle (let the warehouse decide what to do next)
-                this.state = VehicleState.IDLE;
-            }
-            else {
-                // Vehicle is not empty -> start moving to next delivery
-                this.initCurrentRequest(time);
-                int timeToFinishState = this.location.manhattanDistance(this.currentRequest().getDestination().getLocation()) / this.speed;
-                this.initNextState(VehicleState.MOVING_TO_DELIVERY, timeToFinishState);
-                this.moveToDelivery(time);
-            }
         }
     }
 
@@ -138,8 +168,23 @@ public class Vehicle {
             this.loadBox(this.currentRequest().getBox());
             this.outputWriter.writeLine(this, time, Operation.LOAD);
 
+            if (this.isRelocation()) {
+                this.requests.remove(this.currentRequest);
+                this.addRequest(this.requestsToBeUndone.remove(0), time);
+                if (!this.requestsToBeUndone.isEmpty()) {
+                    int timeToFinishState = this.location.manhattanDistance(this.currentRequest().getPickup().getLocation()) / this.speed;
+                    this.initNextState(VehicleState.MOVING_TO_PICKUP, timeToFinishState);
+                    this.moveToPickup(time);
+                }
+                else {
+                    this.returnAfterRelocation = this.location;
+                    int timeToFinishState = this.location.manhattanDistance(this.currentRequest().getDestination().getLocation()) / this.speed;
+                    this.initNextState(VehicleState.MOVING_TO_DELIVERY, timeToFinishState);
+                    this.moveToDelivery(time);
+                }
+            }
 
-            if (this.isFull() || this.doneAllRequests) {
+            else if (this.isFull() || this.doneAllRequests) {
                 // Vehicle is full -> start moving to delivery
                 this.initCurrentRequest(time);
                 int timeToFinishState = this.location.manhattanDistance(this.currentRequest().getDestination().getLocation()) / this.speed;

@@ -55,57 +55,57 @@
     {
       "ID": 0,
       "name": "Vehicle0",
-      "capacity": 1,
-      "xCoordinate": 121,
-      "yCoordinate": 100
+      "capacity": 5,
+      "x": 100,
+      "y": 100
     },
     {
       "ID": 1,
       "name": "Vehicle1",
-      "capacity": 1,
-      "xCoordinate": 121,
-      "yCoordinate": 100
+      "capacity": 5,
+      "x": 100,
+      "y": 100
     }
   ],
   "requests": [
     {
       "ID": 20,
-      "pickupLocation": [
-        "stack0_2"
-      ],
-      "placeLocation": [
-        "BufferPoint"
-      ],
+      "pickupLocation":
+      "stack0_2"
+    ,
+      "placeLocation":
+      "BufferPoint"
+    ,
       "boxID": "B14"
     },
     {
       "ID": 3,
-      "pickupLocation": [
-        "stack0_2"
-      ],
-      "placeLocation": [
-        "BufferPoint"
-      ],
+      "pickupLocation":
+      "stack0_2"
+    ,
+      "placeLocation":
+      "BufferPoint"
+    ,
       "boxID": "B13"
     },
     {
       "ID": 6,
-      "pickupLocation": [
-        "stack0_1"
-      ],
-      "placeLocation": [
-        "BufferPoint"
-      ],
+      "pickupLocation":
+      "stack0_1"
+    ,
+      "placeLocation":
+      "BufferPoint"
+    ,
       "boxID": "B9"
     },
     {
       "ID": 7,
-      "pickupLocation": [
-        "stack0_2"
-      ],
-      "placeLocation": [
-        "BufferPoint"
-      ],
+      "pickupLocation":
+      "stack0_2"
+    ,
+      "placeLocation":
+      "BufferPoint"
+    ,
       "boxID": "B12"
     }
   ]

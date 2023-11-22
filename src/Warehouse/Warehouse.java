@@ -29,7 +29,12 @@ public class Warehouse {
     public void solve() throws BoxNotAccessibleException, StackIsFullException {
         for (Vehicle vehicle : vehicles) {
             if (vehicle.getState() == VehicleState.IDLE) {
-                this.findNextRequest(vehicle);
+                Request nextRequest = this.findNextRequest(vehicle);
+                if (nextRequest != null) {
+                    vehicle.addRequest(nextRequest, clock.getTime());
+                    int timeToFinishState = vehicle.getLocation().manhattanDistance(nextRequest.getPickup().getLocation()) / vehicle.getSpeed();
+                    vehicle.initNextState(VehicleState.MOVING_TO_PICKUP, timeToFinishState);
+                }
             }
         }
         clock.tick();
@@ -43,20 +48,35 @@ public class Warehouse {
                     case UNLOADING -> vehicle.unload(clock.getTime());
                     case LOADING -> {
                         if (vehicle.load(clock.getTime())) {
+//                            System.out.println("test");
                             // If the vehicle is not full yet, we can add another request to the list
                             if (!vehicle.isFull()) {
-                                this.findNextRequest(vehicle);
-
-                                // Requests are empty but the vehicle isn't full yet -> we have done everything we could
-                                if (requests.isEmpty()) vehicle.setDoneAllRequests(true);
+                                Request nextRequest = this.findNextRequest(vehicle);
+//                                System.out.println(nextRequest);
+                                if (nextRequest == null) {
+                                    vehicle.setDoneAllRequests(true);
+                                    Request request = vehicle.getCurrentRequest();
+                                    int timeToFinishState = vehicle.getLocation().manhattanDistance(request.getDestination().getLocation()) / vehicle.getSpeed();
+                                    vehicle.initNextState(VehicleState.MOVING_TO_DELIVERY, timeToFinishState);
+                                    vehicle.getAndDecrementTimeToFinishState();
+                                }
+                                else {
+                                    vehicle.addRequest(nextRequest, clock.getTime());
+                                    int timeToFinishState = vehicle.getLocation().manhattanDistance(nextRequest.getPickup().getLocation()) / vehicle.getSpeed();
+                                    vehicle.initNextState(VehicleState.MOVING_TO_PICKUP, timeToFinishState);
+                                }
                             }
                         }
                     }
                 }
 
                 if (vehicle.getState() == VehicleState.IDLE) {
-                    vehicle.clearRequests();
-                    this.findNextRequest(vehicle);
+                    Request nextRequest = this.findNextRequest(vehicle);
+                    if (nextRequest != null) {
+                        vehicle.addRequest(nextRequest, clock.getTime());
+                        int timeToFinishState = vehicle.getLocation().manhattanDistance(nextRequest.getPickup().getLocation()) / vehicle.getSpeed();
+                        vehicle.initNextState(VehicleState.MOVING_TO_PICKUP, timeToFinishState);
+                    }
                 }
 
                 // Vehicle didn't find a request to do
@@ -71,7 +91,7 @@ public class Warehouse {
         }
     }
 
-    private void findNextRequest(Vehicle vehicle) throws StackIsFullException {
+    private Request findNextRequest(Vehicle vehicle) {
         this.requests.sort((request1, request2) -> Request.compareTo(request1, request2, vehicle));
 
         // Priority 1: Requests that are accessible
@@ -82,43 +102,20 @@ public class Warehouse {
                 if (pickup.canRemoveBox(request.getBox())) {
                     // The box is accessible
                     this.requests.remove(request);
-                    vehicle.addRequest(request, clock.getTime());
-                    int timeToFinishState = vehicle.getLocation().manhattanDistance(pickup.getLocation()) / vehicle.getSpeed();
-                    vehicle.initNextState(VehicleState.MOVING_TO_PICKUP, timeToFinishState);
-                    return;
+                    return request;
                 }
             }
         }
-        // TODO: Relocations
-        // Priority 2: Requests that are not accessible but can be made accessible by relocating a box and it fits in the vehicle
-//        for (Request request : this.requests) {
-//            if (vehicle.getStack().getFreeSpaces() >= request.getPickup().numberOfBoxesOnTop(request.getBox()) + 1) {
-//                System.out.println("Relocation needed");
-//                // The box is not accessible, but the vehicle has enough space to do all the relocations and the pickup
-//                Storage relocationStorage = getRelocationStorage(vehicle, request.getPickup(), request.getPickup().numberOfBoxesOnTop(request.getBox()));
-//
-//                // Make a new request for the relocation
-//                Request doRelocationRequest = new Request(-1, request.getPickup(), relocationStorage, request.getPickup().peek());
-//
-//                // We have to undo this relocation because if this box is in another request that request will never be able to be completed
-//                // But we can only undo this relocation after the original box is moved
-//                Request undoRelocationRequest = new Request(-1, relocationStorage,request.getPickup() , request.getPickup().peek());
-//                vehicle.addUndoRelocationRequest(undoRelocationRequest);
-//
-//                vehicle.addRequest(doRelocationRequest);
-//                vehicle.startNextLoadingRequest(clock.getTime());
-//                int timeToFinishState = vehicle.getLocation().manhattanDistance(vehicle.getCurrentRequest().getPickup().getLocation()) / vehicle.getSpeed();
-//                vehicle.initNextState(VehicleState.MOVING_TO_PICKUP, timeToFinishState);
-//                return;
-//            }
-//        }
+        return null;
     }
+
+
 
     private Storage getRelocationStorage(Vehicle vehicle, Storage storage, int numberOfRelocationsNeeded) {
         this.storages.sort((storage1, storage2) -> Storage.compareByLocationBox(storage1, storage2, storage));
         for (Storage relocationStorage : storages) {
-            // IF the storage is free      && not full                    && not the same storage         && has enough free spaces
-            if (relocationStorage.canBeUsedByVehicle(vehicle.getId()) && !relocationStorage.isFull() && relocationStorage != storage && storage.getFreeSpaces() >= numberOfRelocationsNeeded) {
+            // IF the storage is free      && not full                    && not the same storage         && has enough free spaces             && is a stack
+            if (relocationStorage.canBeUsedByVehicle(vehicle.getId()) && !relocationStorage.isFull() && relocationStorage != storage && storage.getFreeSpaces() >= numberOfRelocationsNeeded && relocationStorage instanceof Stack) {
                 return relocationStorage;
             }
         }

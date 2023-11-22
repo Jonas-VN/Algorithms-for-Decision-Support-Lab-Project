@@ -14,12 +14,12 @@ public class Vehicle {
     private final int capacity;
     private final String name;
     private final int loadingDuration;
-    private final Stack stack;
-    private final java.util.Stack<Request> requests = new java.util.Stack<>();
+    private final ArrayList<Box> stack;
+    private final ArrayList<Request> requests = new ArrayList<>();
+    private Request currentRequest = null;
     private VehicleState state = VehicleState.IDLE;
     private int timeToFinishState = 0;
     private final OutputWriter outputWriter;
-    private final ArrayList<Request> undoRelocationRequests = new ArrayList<>();
     private boolean doneAllRequests = false;
 
     public Vehicle(int id, Location location, int speed, int capacity, String name, int loadingDuration, OutputWriter outputWriter){
@@ -29,12 +29,12 @@ public class Vehicle {
         this.capacity = capacity;
         this.name = name;
         this.loadingDuration = loadingDuration;
-        this.stack = new Stack(-1, null, capacity, "Vehicle " + id);
+        this.stack = new ArrayList<>(capacity);
         this.outputWriter = outputWriter;
     }
 
-    public void clearRequests() {
-        this.requests.clear();
+    public Request getCurrentRequest() {
+        return currentRequest;
     }
 
     public void initNextState(VehicleState vehicleState, int timeToFinishState) {
@@ -54,11 +54,12 @@ public class Vehicle {
         if (this.requests.size() >= this.capacity) throw new StackIsFullException("Vehicle " + this.id + " is full.");
         request.setStartTime(time);
         request.setVehicleStartLocation(this.location);
-        this.requests.push(request);
+        this.currentRequest = request;
+        this.requests.add(request);
     }
 
     public Request currentRequest(){
-        return this.requests.peek();
+        return this.currentRequest;
     }
 
     public String getName() {
@@ -70,7 +71,7 @@ public class Vehicle {
     }
 
     public boolean isFull(){
-        return this.stack.isFull();
+        return this.stack.size() == this.capacity;
     }
 
     public boolean isEmpty(){
@@ -91,8 +92,8 @@ public class Vehicle {
         // The box has been loaded, so the stack is free again
         box.getStack().resetUsedByVehicle();
         box.getStack().removeBox(box);
-        this.stack.addBox(box);
-        box.setStack(this.stack);
+        this.stack.add(box);
+        box.setStack(null);
     }
 
     public void unloadBox(Box box, Storage storage) throws BoxNotAccessibleException, StackIsFullException {
@@ -100,7 +101,7 @@ public class Vehicle {
 
         // The box has been unloaded, so the storage is free again
         storage.resetUsedByVehicle();
-        this.stack.removeBox(box);
+        this.stack.remove(box);
         storage.addBox(box);
     }
 
@@ -109,7 +110,13 @@ public class Vehicle {
             // Vehicle finished unloading
             this.unloadBox(this.currentRequest().getBox(), this.currentRequest().getDestination());
             this.outputWriter.writeLine(this, time, Operation.UNLOAD);
-            this.requests.pop();
+            this.requests.remove(this.currentRequest);
+            // TODO: implement some logic to make it more efficient
+            if (this.requests.isEmpty()) {
+                this.state = VehicleState.IDLE;
+                return;
+            }
+            this.currentRequest = this.requests.get(0);
 
             if (this.isEmpty()) {
                 // Vehicle is empty -> set to idle (let the warehouse decide what to do next)
@@ -132,7 +139,7 @@ public class Vehicle {
             this.outputWriter.writeLine(this, time, Operation.LOAD);
 
 
-            if (this.isFull() || this.doneAllRequests()) {
+            if (this.isFull() || this.doneAllRequests) {
                 // Vehicle is full -> start moving to delivery
                 this.initCurrentRequest(time);
                 int timeToFinishState = this.location.manhattanDistance(this.currentRequest().getDestination().getLocation()) / this.speed;
@@ -203,10 +210,6 @@ public class Vehicle {
 
     public void setDoneAllRequests(boolean doneAllRequests) {
         this.doneAllRequests = doneAllRequests || this.capacity == this.requests.size() - 1;
-    }
-
-    public boolean doneAllRequests() {
-        return this.doneAllRequests;
     }
 }
 

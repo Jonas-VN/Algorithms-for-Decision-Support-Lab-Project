@@ -90,8 +90,8 @@ public class JSONParser {
             int vehicleId = vehicleData.getInt("ID");
             String vehicleName = vehicleData.getString("name");
             int vehicleCapacity = vehicleData.getInt("capacity");
-            int vehicleX = vehicleData.getInt("xCoordinate");
-            int vehicleY =  vehicleData.getInt("yCoordinate");
+            int vehicleX = vehicleData.getInt("x");
+            int vehicleY =  vehicleData.getInt("y");
             Location vehicleLocation = new Location(vehicleX,vehicleY);
 
             vehiclesList.add(new Vehicle(vehicleId, vehicleLocation, vehicleSpeed, vehicleCapacity, vehicleName, loadingDuration, outputWriter));
@@ -108,12 +108,10 @@ public class JSONParser {
             JSONObject requestData = requests.getJSONObject(idx);
             int requestId = requestData.getInt("ID");
 
-            JSONArray pickupArray = requestData.getJSONArray("pickupLocation");
-            String pickupLocationName = pickupArray.getString(0);
+            String pickupLocationName = requestData.getString("pickupLocation");
             Storage pickupLocationStack = findStackBasedOnName(stacks, pickupLocationName);
 
-            JSONArray placeArray = requestData.getJSONArray("placeLocation");
-            String placeLocationName = placeArray.getString(0);
+            String placeLocationName = requestData.getString("placeLocation");
             Storage placeLocationStack = findStackBasedOnName(stacks, placeLocationName);
 
             String boxIdStack = requestData.getString("boxID");

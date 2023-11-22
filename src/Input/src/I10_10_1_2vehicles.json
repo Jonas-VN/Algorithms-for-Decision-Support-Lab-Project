@@ -148,116 +148,116 @@
       "ID": 0,
       "name": "Vehicle0",
       "capacity": 1,
-      "xCoordinate": 100,
-      "yCoordinate": 100
+      "x": 100,
+      "y": 100
     },
     {
       "ID": 1,
       "name": "Vehicle1",
       "capacity": 1,
-      "xCoordinate": 100,
-      "yCoordinate": 100
+      "x": 100,
+      "y": 100
     }
   ],
   "requests": [
     {
       "ID": 20,
-      "pickupLocation": [
-        "stack0_2"
-      ],
-      "placeLocation": [
-        "BufferPoint"
-      ],
+      "pickupLocation":
+      "stack0_2"
+    ,
+      "placeLocation":
+      "BufferPoint"
+    ,
       "boxID": "B14"
     },
     {
       "ID": 21,
-      "pickupLocation": [
-        "stack0_10"
-      ],
-      "placeLocation": [
-        "BufferPoint"
-      ],
+      "pickupLocation":
+      "stack0_10"
+    ,
+      "placeLocation":
+      "BufferPoint"
+    ,
       "boxID": "B54"
     },
     {
       "ID": 2,
-      "pickupLocation": [
-        "stack0_10"
-      ],
-      "placeLocation": [
-        "BufferPoint"
-      ],
+      "pickupLocation":
+      "stack0_10"
+    ,
+      "placeLocation":
+      "BufferPoint"
+    ,
       "boxID": "B53"
     },
     {
       "ID": 3,
-      "pickupLocation": [
-        "stack0_2"
-      ],
-      "placeLocation": [
-        "BufferPoint"
-      ],
+      "pickupLocation":
+      "stack0_2"
+    ,
+      "placeLocation":
+      "BufferPoint"
+    ,
       "boxID": "B13"
     },
     {
       "ID": 5,
-      "pickupLocation": [
-        "stack0_8"
-      ],
-      "placeLocation": [
-        "BufferPoint"
-      ],
+      "pickupLocation":
+      "stack0_8"
+    ,
+      "placeLocation":
+      "BufferPoint"
+    ,
       "boxID": "B44"
     },
     {
       "ID": 6,
-      "pickupLocation": [
-        "stack0_1"
-      ],
-      "placeLocation": [
-        "BufferPoint"
-      ],
+      "pickupLocation":
+      "stack0_1"
+    ,
+      "placeLocation":
+      "BufferPoint"
+    ,
       "boxID": "B9"
     },
     {
       "ID": 7,
-      "pickupLocation": [
-        "stack0_2"
-      ],
-      "placeLocation": [
-        "BufferPoint"
-      ],
+      "pickupLocation":
+      "stack0_2"
+    ,
+      "placeLocation":
+      "BufferPoint"
+    ,
       "boxID": "B12"
     },
     {
       "ID": 8,
-      "pickupLocation": [
-        "stack0_10"
-      ],
-      "placeLocation": [
-        "BufferPoint"
-      ],
+      "pickupLocation":
+      "stack0_10"
+    ,
+      "placeLocation":
+      "BufferPoint"
+    ,
       "boxID": "B52"
     },
     {
       "ID": 10,
-      "pickupLocation": [
-        "stack0_5"
-      ],
-      "placeLocation": [
-        "BufferPoint"
-      ],
+      "pickupLocation":
+      "stack0_5"
+    ,
+      "placeLocation":
+      "BufferPoint"
+    ,
       "boxID": "B29"
     },
     {
       "ID": 11,
-      "pickupLocation": [
-        "stack0_2"
-      ],
-      "placeLocation": [
-        "BufferPoint"
-      ],
+      "pickupLocation":
+      "stack0_2"
+    ,
+      "placeLocation":
+      "BufferPoint"
+    ,
       "boxID": "B11"
     }
   ]

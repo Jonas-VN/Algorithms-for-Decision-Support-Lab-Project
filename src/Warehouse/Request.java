@@ -66,10 +66,14 @@ public class Request {
         double lhsDistance = vehicle.getLocation().manhattanDistance(lhs.getPickup().getLocation());
         // Add some extra distance behind the decimal point to prefer boxes that are on top of a stack
         lhsDistance += (double) lhs.getPickup().numberOfBoxesOnTop(lhs.getBox()) / 10;
+        // Prioritize moving to buffer points
+        if (lhs.getDestination() instanceof BufferPoint) lhsDistance -= 9999;
 
         double rhsDistance = vehicle.getLocation().manhattanDistance(rhs.getPickup().getLocation());
         // Add some extra distance behind the decimal point to prefer boxes that are on top of a stack
         rhsDistance += (double) rhs.getPickup().numberOfBoxesOnTop(rhs.getBox()) / 10;
+        // Prioritize moving to buffer points
+        if (rhs.getDestination() instanceof BufferPoint) rhsDistance -= 9999;
 
         return Double.compare(lhsDistance, rhsDistance);
     }

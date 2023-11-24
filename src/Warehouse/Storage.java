@@ -5,11 +5,11 @@ import Warehouse.Exceptions.BoxNotAccessibleException;
 import Warehouse.Exceptions.StackIsFullException;
 
 public abstract class Storage {
-    private final int id;
-    private final String name;
-    private final Location location;
-    protected final int capacity;
+    protected final int id;
+    protected final String name;
+    protected final Location location;
     protected int vehicleId = -1;
+    protected final int capacity;
 
     public Storage(int id, Location location, int capacity, String name) {
         super();
@@ -21,10 +21,6 @@ public abstract class Storage {
 
     public int getId() {
         return id;
-    }
-
-    public int getUsedByVehicle() {
-        return vehicleId;
     }
 
     public abstract int getFreeSpaces();

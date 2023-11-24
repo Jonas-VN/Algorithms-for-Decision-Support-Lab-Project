@@ -18,7 +18,7 @@ public class OutputWriter {
     }
 
     public void writeLine(Vehicle vehicle, int endTime, Operation operation) {
-        Request request = vehicle.currentRequest();
+        Request request = vehicle.getCurrentRequest();
         String line = (vehicle.getName() + ";" +
                 request.getVehicleStartLocation().getX() + ";" +
                 request.getVehicleStartLocation().getY() + ";" +

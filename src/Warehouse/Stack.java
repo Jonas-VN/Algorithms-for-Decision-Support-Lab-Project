@@ -76,11 +76,29 @@ public class Stack extends Storage {
 
     @Override
     public boolean canRemoveBox(Box box) {
-        return this.boxes.peek() == box;
+        if (this.boxes.isEmpty()) return false;
+        else return this.boxes.peek() == box;
     }
 
     @Override
     public Box peek() {
         return this.boxes.peek();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder ret = new StringBuilder("Stack{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", location=" + location +
+                ", vehicleId=" + vehicleId +
+                ", capacity=" + capacity +
+                ", boxes=");
+        // Right is the top of the stack
+        for (Box box : this.boxes) {
+            ret.append(box.getId()).append(", ");
+        }
+        ret.append('}');
+        return ret.toString();
     }
 }

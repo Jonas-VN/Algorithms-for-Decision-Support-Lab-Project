@@ -10,6 +10,7 @@ import java.io.IOException;
 
 public class OutputWriter {
     File outputFile;
+    int counter = 0;
 
     public OutputWriter(File outputFile) throws IOException {
         this.outputFile = outputFile;
@@ -19,7 +20,7 @@ public class OutputWriter {
 
     public void writeLine(Vehicle vehicle, int endTime, Operation operation) {
         Request request = vehicle.getCurrentRequest();
-        String line = (vehicle.getName() + ";" +
+        String line = (++counter + ": " + vehicle.getName() + ";" +
                 request.getVehicleStartLocation().getX() + ";" +
                 request.getVehicleStartLocation().getY() + ";" +
                 request.getStartTime() + ";" +

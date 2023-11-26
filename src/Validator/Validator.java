@@ -3,23 +3,16 @@ package Validator;
 import Utils.Location;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
 public class Validator {
     public static void main(String[] args) {
-        String csvFile = "src/Output/src/output";
-
-
-        csvFile += "100_120_2_2_8b2";
+        String outputFile = "100_120_2_2_8b2";
         final int loadDuration = 5;
 
-
-        csvFile += ".txt";
+        String csvFile = "src/Output/src/output" + outputFile + ".txt";
         System.out.println(csvFile);
-
-
         try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
             int lineCount = 0;
             String line;

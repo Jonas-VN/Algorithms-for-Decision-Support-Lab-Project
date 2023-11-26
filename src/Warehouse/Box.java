@@ -39,7 +39,7 @@ public class Box {
     public String toString() {
         return "Box{" +
                 "id='" + id + '\'' +
-                ", storage=" + storage.getName() +
+                ", storage=" + (storage == null ? "NULL" : storage.getName()) +
                 '}';
     }
 }

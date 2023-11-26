@@ -18,13 +18,13 @@ public class Vehicle {
     private final ArrayList<Request> requests = new ArrayList<>();
     private Request currentRequest = null;
     private VehicleState state = VehicleState.IDLE;
-    private int timeToFinishState = 0;
+    private int timeFinishState = 0;
     private final OutputWriter outputWriter;
     private final ArrayList<Request> requestsToBeUndone = new ArrayList<>();
     private boolean isRelocating = false;
     private int timeIdle = 0;
-    private boolean canSkipATick = false;
     private Storage freedStorage;
+    private boolean needToCheckPrevCycle = false;
 
     public Vehicle(int id, Location location, int speed, int capacity, String name, int loadingDuration, OutputWriter outputWriter) {
         this.id = id;
@@ -35,6 +35,15 @@ public class Vehicle {
         this.loadingDuration = loadingDuration;
         this.stack = new ArrayList<>(capacity);
         this.outputWriter = outputWriter;
+    }
+
+    public boolean needToCheckPrevCycle() {
+//        if (needToCheckPrevCycle) System.out.println("Vehicle " + this.id + " needs to check previous cycle");
+        return this.needToCheckPrevCycle;
+    }
+
+    public void resetNeedToCheckPrevCycle() {
+        this.needToCheckPrevCycle = false;
     }
 
     public Request getCurrentRequest() {
@@ -49,13 +58,9 @@ public class Vehicle {
         this.requestsToBeUndone.add(request);
     }
 
-    public void initNextState(VehicleState vehicleState, int timeToFinishState) {
+    public void initNextState(VehicleState vehicleState, int timeFinishState) {
         this.state = vehicleState;
-        this.timeToFinishState = timeToFinishState;
-    }
-
-    public int getAndDecrementTimeToFinishState() {
-        return this.timeToFinishState--;
+        this.timeFinishState = timeFinishState;
     }
 
     public void incrementTimeIdle() {
@@ -66,20 +71,31 @@ public class Vehicle {
         return this.state;
     }
 
-    public void addRequest(Request request, int time) throws StackIsFullException {
+    public void addRequest(Request request, int time) throws StackIsFullException, BoxNotAccessibleException {
         if (this.requests.size() >= this.capacity) throw new StackIsFullException("Vehicle " + this.id + " is full.");
         this.currentRequest = request;
         this.requests.add(request);
 
-        int timeToFinishState = this.location.manhattanDistance(request.getPickup().getLocation()) / this.speed;
-        this.initNextState(VehicleState.MOVING_TO_PICKUP, timeToFinishState);
-//        System.out.println(time + " ... " + this.getName());
-        this.initCurrentRequest(time - timeIdle);
-        this.timeIdle = 0;
-
-        // Claim the pickup location before we start driving there (if possible)
-        if (this.currentRequest.getPickup().canBeUsedByVehicle(this.id))
+        if (this.location == request.getPickup().getLocation()) {
+            // Vehicle is already at the pickup location -> start loading
+            this.initNextState(VehicleState.LOADING, time + this.loadingDuration);
             this.currentRequest.getPickup().setUsedByVehicle(this.id);
+            this.initCurrentRequest(time - timeIdle);
+            this.timeIdle = 0;
+            this.loadBox(this.currentRequest.getBox());
+            this.load(time);
+        }
+        else {
+            // Vehicle is not at the pickup location -> start moving there
+            int timeToFinishState = time + this.location.manhattanDistance(request.getPickup().getLocation()) / this.speed;
+            this.initNextState(VehicleState.MOVING_TO_PICKUP, timeToFinishState);
+            this.initCurrentRequest(time - timeIdle);
+            this.timeIdle = 0;
+
+            // Claim the pickup location before we start driving there (if possible)
+            if (this.currentRequest.getPickup().canBeUsedByVehicle(this.id))
+                this.currentRequest.getPickup().setUsedByVehicle(this.id);
+        }
     }
 
     public String getName() {
@@ -118,11 +134,7 @@ public class Vehicle {
     }
 
     public void unload(int time) throws BoxNotAccessibleException, StackIsFullException {
-        if (this.canSkipATick) {
-            this.canSkipATick = false;
-            this.getAndDecrementTimeToFinishState();
-        }
-        if (this.getAndDecrementTimeToFinishState() == 0) {
+        if (time == this.timeFinishState) {
             this.outputWriter.writeLine(this, time, Operation.UNLOAD);
 
              // Fulfilled the full  -> can be removed
@@ -145,14 +157,11 @@ public class Vehicle {
                 this.moveToDelivery(time);
             }
         }
+        else this.needToCheckPrevCycle = true;
     }
 
     public void load(int time) throws BoxNotAccessibleException, StackIsFullException {
-        if (this.canSkipATick) {
-            this.canSkipATick = false;
-            this.getAndDecrementTimeToFinishState();
-        }
-        if (this.getAndDecrementTimeToFinishState() == 0) {
+        if (time == this.timeFinishState) {
             // Vehicle finished loading
             this.outputWriter.writeLine(this, time, Operation.LOAD);
 
@@ -173,9 +182,10 @@ public class Vehicle {
     }
 
     public void setupMoveToDelivery(int time) {
+        if (timeIdle != 0) System.out.println("Vehicle " + this.id + " was idle for " + timeIdle + " ticks");
         this.initCurrentRequest(time - this.timeIdle);
         this.timeIdle = 0;
-        int timeToFinishState = this.location.manhattanDistance(this.currentRequest.getDestination().getLocation()) / this.speed;
+        int timeToFinishState = time + this.location.manhattanDistance(this.currentRequest.getDestination().getLocation()) / this.speed;
         this.initNextState(VehicleState.MOVING_TO_DELIVERY, timeToFinishState);
 
         // If the destination storage is already claimed, we still drive there and hope it will be free when we get there
@@ -184,34 +194,28 @@ public class Vehicle {
     }
 
     public void moveToDelivery(int time) throws BoxNotAccessibleException, StackIsFullException {
-        if (this.canSkipATick) {
-            this.canSkipATick = false;
-            this.getAndDecrementTimeToFinishState();
-        }
-        if (this.canStartUnloading()) {
+        if (this.canStartUnloading(time)) {
             // Vehicle arrived at delivery -> start unloading
             this.location = this.currentRequest.getDestination().getLocation();
-            this.initNextState(VehicleState.UNLOADING, this.loadingDuration);
+            if (this.timeIdle != 0) this.initNextState(VehicleState.UNLOADING, time + this.loadingDuration - 1);
+            else this.initNextState(VehicleState.UNLOADING, time + this.loadingDuration);
             this.currentRequest.getDestination().setUsedByVehicle(this.id);
             this.unloadBox(this.currentRequest.getBox(), this.currentRequest.getDestination());
             this.unload(time);
         }
+        else this.needToCheckPrevCycle = true;
     }
 
-    private boolean canStartUnloading() {
+    private boolean canStartUnloading(int time) {
         // (We have arrived at the delivery location OR we were already there) AND the delivery location is free
-        boolean timeIsUp = this.getAndDecrementTimeToFinishState() <= 0;
+        boolean timeIsUp = time >= this.timeFinishState;
         boolean locationIsSame = this.location.equals(this.currentRequest.getDestination().getLocation());
         boolean canBeUsedByVehicle = this.currentRequest.getDestination().canBeUsedByVehicle(this.id);
         return (timeIsUp || locationIsSame) && canBeUsedByVehicle;
     }
 
     public void moveToPickup(int time) throws BoxNotAccessibleException, StackIsFullException {
-        if (this.canSkipATick) {
-            this.canSkipATick = false;
-            this.getAndDecrementTimeToFinishState();
-        }
-        if (this.canStartLoading()) {
+        if (this.canStartLoading(time)) {
             // Vehicle arrived at pickup -> start loading
             if (!this.currentRequest.getPickup().canRemoveBox(this.currentRequest.getBox())) {
                 // TODO: can be deleted now ig?
@@ -226,18 +230,17 @@ public class Vehicle {
             }
             else {
                 this.location = this.currentRequest.getPickup().getLocation();
-                this.initNextState(VehicleState.LOADING, this.loadingDuration);
+                this.initNextState(VehicleState.LOADING, time + this.loadingDuration);
                 this.currentRequest.getPickup().setUsedByVehicle(this.id);
                 this.loadBox(this.currentRequest.getBox());
                 this.load(time);
-                getAndDecrementTimeToFinishState();
             }
         }
     }
 
-    private boolean canStartLoading() {
+    private boolean canStartLoading(int time) {
         // (We have arrived at the pickup location OR we were already there) AND the pickup location is free
-        boolean timeIsUp = this.getAndDecrementTimeToFinishState() <= 0;
+        boolean timeIsUp = time >= this.timeFinishState;
         boolean locationIsSame = this.location.equals(this.currentRequest.getPickup().getLocation());
         boolean canBeUsedByVehicle = this.currentRequest.getPickup().canBeUsedByVehicle(this.id);
         return (timeIsUp || locationIsSame) && canBeUsedByVehicle;
@@ -271,18 +274,15 @@ public class Vehicle {
         }
     }
 
-    public void setCanSkipATick() {
-        this.canSkipATick = true;
-    }
-
     public Storage getFreedStorage() {
         Storage ret = this.freedStorage;
         this.freedStorage = null;
         return ret;
     }
 
-    public int getSpeed() {
-        return this.speed;
+    public void skipTick() {
+        System.out.println("Vehicle " + this.id + " skipped a tick at +-" + this.timeFinishState);
+        this.timeFinishState--;
     }
 }
 

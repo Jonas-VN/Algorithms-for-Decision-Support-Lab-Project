@@ -53,6 +53,8 @@ public abstract class Storage {
 
     public abstract boolean canBeUsedByVehicle(int vehicleId);
 
+    public abstract boolean willBeFull(int numberOfBoxes);
+
     public void setUsedByVehicle(int vehicleId) {
         this.vehicleId = vehicleId;
     }

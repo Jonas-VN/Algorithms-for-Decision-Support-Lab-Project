@@ -33,6 +33,11 @@ public class Stack extends Storage {
     }
 
     @Override
+    public boolean willBeFull(int numberOfBoxes) {
+        return this.boxes.size() + numberOfBoxes > this.capacity;
+    }
+
+    @Override
     public boolean isFull() {
         return this.boxes.size() == this.capacity;
     }
@@ -87,18 +92,11 @@ public class Stack extends Storage {
 
     @Override
     public String toString() {
-        StringBuilder ret = new StringBuilder("Stack{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", location=" + location +
-                ", vehicleId=" + vehicleId +
-                ", capacity=" + capacity +
-                ", boxes=");
-        // Right is the top of the stack
+        StringBuilder ret = new StringBuilder("Stack{id=" + id + ", boxes=[");
         for (Box box : this.boxes) {
             ret.append(box.getId()).append(", ");
         }
-        ret.append('}');
+        ret.append("]}");
         return ret.toString();
     }
 }

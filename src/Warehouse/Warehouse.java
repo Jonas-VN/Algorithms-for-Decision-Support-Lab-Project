@@ -17,31 +17,52 @@ public class Warehouse {
     private final ArrayList<Vehicle> vehicles;
     private final ArrayList<Request> requests;
     private final ArrayList<Box> usedBoxes = new ArrayList<>();
-    private HashMap<Storage, Vehicle> previousCycleStorageIDs;
+    private final HashMap<Storage, Integer> requestsToStack;
+    private WarehouseState warehouseState = WarehouseState.MOVING_TO_BUFFERPOINT;
+    private final HashMap<Storage, Vehicle> freedStorages = new HashMap<>();
+    private final ArrayList<Request> undoRequests = new ArrayList<>();
+    private final HashMap<Storage, Integer> nonRelocatableStacks = new HashMap<>();
 
     public Warehouse(String problem) throws IOException, StackIsFullException {
         JSONParser parser = new JSONParser(new File("src/Input/src/I" + problem + ".json"));
         this.storages = parser.parseBufferPoints();
-        this.storages.addAll(parser.parseStacks());
+        ArrayList<Stack> stacks = parser.parseStacks();
+        this.storages.addAll(stacks);
         OutputWriter outputWriter = new OutputWriter(new File("src/Output/src/output" + problem + ".txt"));
         this.vehicles = parser.parseVehicles(outputWriter);
         this.requests = parser.parseRequests(storages);
+        this.requestsToStack = new HashMap<>(stacks.size());
+        for (Stack stack : stacks) {
+            this.requestsToStack.put(stack, 0);
+        }
         for (Request request : this.requests) {
             this.usedBoxes.add(request.getBox());
+            if (request.getDestination() instanceof Stack && this.requestsToStack.containsKey(request.getDestination())) {
+                this.requestsToStack.put(request.getDestination(), this.requestsToStack.get(request.getDestination()) + 1);
+            }
         }
-        this.previousCycleStorageIDs = new HashMap<>(this.vehicles.size());
         this.clock = new Clock();
     }
 
     public void solve() throws BoxNotAccessibleException, StackIsFullException {
         final int numberOfVehicles = this.vehicles.size();
-        boolean allVehiclesIdle = false;
-        HashMap<Storage, Vehicle> currentCycleStorageIDs = new HashMap<>(numberOfVehicles);
+        for (Vehicle vehicle : vehicles) {
+            this.allocateNextRequest(vehicle);
+        }
 
-        while (!requests.isEmpty() || !allVehiclesIdle) {
+        while (!requests.isEmpty() || this.warehouseState != WarehouseState.FINISHED) {
             int numberOfVehiclesIdle = 0;
-            this.previousCycleStorageIDs = currentCycleStorageIDs;
-            currentCycleStorageIDs = new HashMap<>(numberOfVehicles);
+            for (Vehicle vehicle : vehicles) {
+                if (vehicle.getCurrentRequest() != null &&
+                        vehicle.getCurrentRequest().getDestination() != null &&
+                        this.freedStorages.containsKey(vehicle.getCurrentRequest().getDestination())) {
+                    Vehicle freedByVehicle = this.freedStorages.get(vehicle.getCurrentRequest().getDestination());
+                    if (freedByVehicle.getId() > vehicle.getId()) {
+                        vehicle.skipTick();
+                    }
+                }
+            }
+            this.freedStorages.clear();
 
             for (Vehicle vehicle : vehicles) {
                 switch (vehicle.getState()) {
@@ -50,34 +71,32 @@ public class Warehouse {
                     case UNLOADING -> vehicle.unload(clock.getTime());
                     case LOADING -> vehicle.load(clock.getTime());
                 }
-
-                if (vehicle.needToCheckPrevCycle() && vehicle.getCurrentRequest() != null && vehicle.getState() == VehicleState.UNLOADING) {
-//                    System.out.println(clock.getTime() + ": " + this.previousCycleStorageIDs);
-                    this.checkToSkipTick(vehicle);
-                }
-                vehicle.resetNeedToCheckPrevCycle();
-
-                ArrayList<Request> undoRequests = vehicle.getRequestsToBeUndone();
-                if (undoRequests != null && !undoRequests.isEmpty()) {
-                    this.requests.addAll(undoRequests);
-                }
-
-                if (vehicle.getState() == VehicleState.IDLE) this.allocateNextRequest(vehicle);
-
-                Storage storage = vehicle.getFreedStorage();
-                if (storage != null) {
-                    currentCycleStorageIDs.put(storage, vehicle);
-                }
-                allVehiclesIdle = vehicle.getState() == VehicleState.IDLE && ++numberOfVehiclesIdle == numberOfVehicles;
+                Storage freedStorage = vehicle.getFreedStorage();
+                if (freedStorage != null) this.freedStorages.put(vehicle.getFreedStorage(), vehicle);
             }
-            clock.tick();
-        }
-    }
 
-    private void checkToSkipTick(Vehicle vehicle) {
-        if (this.previousCycleStorageIDs.containsKey(vehicle.getCurrentRequest().getDestination())) {
-            Vehicle previousVehicle = this.previousCycleStorageIDs.get(vehicle.getCurrentRequest().getDestination());
-            if (previousVehicle.getId() > vehicle.getId()) vehicle.skipTick();
+            for (Vehicle vehicle : vehicles) {
+                if (vehicle.getState() == VehicleState.IDLE) this.allocateNextRequest(vehicle);
+                // Didn't find a new request, so the vehicle is still idle
+                if (vehicle.getState() == VehicleState.IDLE) numberOfVehiclesIdle++;
+            }
+
+            if (numberOfVehiclesIdle == numberOfVehicles) {
+                this.warehouseState = this.warehouseState.next();
+                if (this.warehouseState == WarehouseState.UNDOING_RELOCATION) {
+                    this.requests.addAll(this.undoRequests);
+                } else if (this.warehouseState == WarehouseState.MOVING_TO_BUFFERPOINT_WITH_RELOCATION) {
+                    this.setupRelocations();
+                }
+                else if (this.warehouseState == WarehouseState.MOVING_TO_STACK) {
+                    System.out.println(requests);
+                } else if (this.warehouseState == WarehouseState.FINISHED) {
+                    System.out.println(requests);
+                    break;
+                }
+                System.out.println("WarehouseState: " + this.warehouseState);
+            }
+            else clock.tick();
         }
     }
 
@@ -86,93 +105,117 @@ public class Warehouse {
         this.requests.sort((request1, request2) -> Request.compareTo(request1, request2, vehicle));
         if (!this.requests.isEmpty()) {
             // #1: do all the request where the boxes are directly accessible.
-            for (Request request : this.requests) {
-                Storage pickup = request.getPickup();
-                Storage destination = request.getDestination();
+            if (this.warehouseState == WarehouseState.MOVING_TO_BUFFERPOINT) {
+                for (Request request : this.requests) {
+                    Storage pickup = request.getPickup();
 
-                if (pickup.canRemoveBox(request.getBox()) && pickup.canBeUsedByVehicle(vehicle.getId()) && !destination.isFull() && request.getDestination() instanceof BufferPoint) {
-                    // The box is accessible and can be delivered
-//                    System.out.println("Box is accessible and can be delivered by " + vehicle.getName() + " ... " + request.getBox() + " ... " + clock.getTime());
-                    this.requests.remove(request);
-                    vehicle.setIsRelocating(false);
-                    vehicle.addRequest(request, clock.getTime());
-
-                    // If vehicle1 cleared this in the previous cycle, vehicle0 can skip a tick because it could have started moving in the previous cycle
-                    if (this.previousCycleStorageIDs.containsKey(pickup)) {
-                        Vehicle previousVehicle = this.previousCycleStorageIDs.get(pickup);
-                        if (previousVehicle.getId() > vehicle.getId()) {
-                            vehicle.skipTick();
-                        }
+                    if (pickup.canRemoveBox(request.getBox()) && pickup.canBeUsedByVehicle(vehicle.getId()) && request.getDestination() instanceof BufferPoint) {
+                        // The box is accessible and can be delivered
+                        this.doAccessibleRequest(vehicle, request);
+                        return;
                     }
-                    return;
                 }
             }
 
             // #2. No request (to the bufferPoint) can be done without relocation, so we need to do some relocations first
-            for (Request request : this.requests) {
-                Storage pickup = request.getPickup();
-                if (pickup.canBeUsedByVehicle(vehicle.getId()) && request.getDestination() instanceof BufferPoint) {
-                    Storage relocationStorage = this.getRelocationStorage(vehicle, pickup);
-                    if (relocationStorage == null) {
-                        // No relocation storage found, so we can't do this request
+            if (this.warehouseState == WarehouseState.MOVING_TO_BUFFERPOINT_WITH_RELOCATION) {
+                for (Request request : this.requests) {
+                    Storage pickup = request.getPickup();
+                    if (request.getDestination() instanceof BufferPoint) {
+                        if (request.getPickup().canRemoveBox(request.getBox())) {
+                            this.doAccessibleRequest(vehicle, request);
+                            this.nonRelocatableStacks.put(request.getPickup(), this.nonRelocatableStacks.get(request.getPickup()) - 1);
+                            return;
+                        }
+                        Storage relocationStorage = this.getRelocationStorage(pickup);
+                        if (relocationStorage == null) {
+                            System.out.println("No relocation storage found for request: " + request);
+                            return;
+                        }
+                        // We need to undo the relocation
+                        this.undoRequests.add(new Request(-1, relocationStorage, pickup, pickup.peek()));
+                        // We can just move it to the relocation storage
+                        vehicle.addRequest(new Request(0, pickup, relocationStorage, pickup.peek()), clock.getTime());
+                        if (request.getDestination() instanceof Stack && this.requestsToStack.containsKey(request.getDestination())) {
+                            this.requestsToStack.put(request.getDestination(), this.requestsToStack.get(request.getDestination()) - 1);
+                        }
                         return;
                     }
-                    System.out.println("Relocating with " + vehicle.getName());
-                    vehicle.setIsRelocating(true);
-                    // We need to undo the relocation
-                    if (this.usedBoxes.contains(pickup.peek()))
-                        vehicle.addRequestToBeUndone(new Request(-1, relocationStorage, pickup, pickup.peek()));
-                    // We can just move it to the relocation storage
-                    vehicle.addRequest(new Request(0, pickup, relocationStorage, pickup.peek()), clock.getTime());
+                }
+                System.out.println("No request to bufferpoint can be done without relocation");
+            }
 
-                    if (this.previousCycleStorageIDs.containsKey(pickup)) {
-                        Vehicle previousVehicle = this.previousCycleStorageIDs.get(pickup);
-                        if (previousVehicle.getId() > vehicle.getId()) {
-                            vehicle.skipTick();
-                        }
+            // #3. Undo all the relocations
+            if (this.warehouseState == WarehouseState.UNDOING_RELOCATION) {
+                for (Request request : this.requests) {
+                    Storage pickup = request.getPickup();
+                    Storage destination = request.getDestination();
+
+                    if (request.getId() == -1 && pickup.canRemoveBox(request.getBox())) {
+                        // The box is accessible and can be delivered
+                        this.doAccessibleRequest(vehicle, request);
+                        return;
                     }
-                    return;
                 }
             }
 
-            // #3. Do all the other requests where the boxes are directly accessible
-            for (Request request : this.requests) {
-                Storage pickup = request.getPickup();
-                Storage destination = request.getDestination();
+            // #4. Do all the other requests where the boxes are directly accessible
+            if (this.warehouseState == WarehouseState.MOVING_TO_STACK) {
+                for (Request request : this.requests) {
+                    Storage pickup = request.getPickup();
+                    Storage destination = request.getDestination();
 
-                if (pickup.canRemoveBox(request.getBox()) && pickup.canBeUsedByVehicle(vehicle.getId()) && !destination.isFull()) {
-                    // The box is accessible and can be delivered
-                    this.requests.remove(request);
-                    vehicle.setIsRelocating(false);
-                    vehicle.addRequest(request, clock.getTime());
-                    return;
+                    if (pickup.canRemoveBox(request.getBox()) && pickup.canBeUsedByVehicle(vehicle.getId()) && !destination.isFull()) {
+                        // The box is accessible and can be delivered
+                        this.doAccessibleRequest(vehicle, request);
+                        return;
+                    }
                 }
             }
 
         }
-        // #4. Delivering because the vehicle cant do anything else
+        // #5. Delivering because the vehicle cant do anything else
         if (!vehicle.isEmpty()) {
-            System.out.println("Not full but delivering");
-            vehicle.setupMoveToDelivery(clock.getTime());
-             return;
+            vehicle.setupMoveToDelivery(this.clock.getTime());
         }
-
-        // #5. The vehicle is empty and can't do anything else
-        vehicle.incrementTimeIdle();
     }
 
-    private Storage getRelocationStorage(Vehicle vehicle, Storage pickup) {
+    private Storage getRelocationStorage(Storage pickup) {
         this.storages.sort((storage1, storage2) -> Storage.compareByLocationBox(storage1, storage2, pickup));
         for (Storage relocationStorage : storages) {
-            if (relocationStorage.canBeUsedByVehicle(vehicle.getId()) &&          // The vehicle can use this storage
-                    !relocationStorage.isFull() &&                                // The storage is not full
-                    relocationStorage != pickup &&                               // The storage is not the same as the pickup storage
-                    relocationStorage instanceof Stack) {                         // The storage is a stack
+            if (relocationStorage != pickup &&                               // The storage is not the same as the pickup storage
+                    relocationStorage instanceof Stack &&                     // The storage is a stack
+                    !relocationStorage.willBeFull(this.requestsToStack.get(relocationStorage) + 1) && // The storage will not be full after the relocation
+                    this.nonRelocatableStacks.get(relocationStorage) == 0      // The relocation storage is not needed anymore
+            ) {
                 return relocationStorage;
             }
         }
         return null;
     }
+
+    private void doAccessibleRequest(Vehicle vehicle, Request request) throws StackIsFullException, BoxNotAccessibleException {
+        this.requests.remove(request);
+        vehicle.addRequest(request, clock.getTime());
+        if (request.getDestination() instanceof Stack && this.requestsToStack.containsKey(request.getDestination())) {
+            this.requestsToStack.put(request.getDestination(), this.requestsToStack.get(request.getDestination()) - 1);
+        }
+    }
+
+    private void doRelocationRequest(Vehicle vehicle, Request request) {
+
+    }
+
+    private void setupRelocations() {
+        for (Storage storage : this.storages) this.nonRelocatableStacks.put(storage, 0);
+
+        for (Request request : this.requests) {
+            if (request.getDestination() instanceof BufferPoint) {
+                this.nonRelocatableStacks.put(request.getPickup(), this.nonRelocatableStacks.get(request.getPickup()) + 1);
+            }
+        }
+    }
+
 
     @Override
     public String toString() {

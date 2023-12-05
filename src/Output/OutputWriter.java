@@ -20,7 +20,7 @@ public class OutputWriter {
 
     public void writeLine(Vehicle vehicle, int endTime, Operation operation) {
         Request request = vehicle.getCurrentRequest();
-        String line = (++counter + ": " + vehicle.getName() + ";" +
+        String line = (vehicle.getName() + ";" +
                 request.getVehicleStartLocation().getX() + ";" +
                 request.getVehicleStartLocation().getY() + ";" +
                 request.getStartTime() + ";" +
@@ -29,7 +29,7 @@ public class OutputWriter {
                 endTime + ";" +
                 request.getBox().getId() + ";" +
                 operation);
-        System.out.println(line);
+        System.out.println(++counter + ": " + line);
         try {
             FileWriter fw = new FileWriter(outputFile, true);
             fw.write(line);

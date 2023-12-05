@@ -1,6 +1,5 @@
-package Validator;
-
 import Utils.Location;
+import Warehouse.Warehouse;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -8,7 +7,7 @@ import java.io.IOException;
 
 public class Validator {
     public static void main(String[] args) {
-        String outputFile = "100_120_2_2_8b2";
+        String outputFile = Main.problem;
         final int loadDuration = 5;
 
         String csvFile = "src/Output/src/output" + outputFile + ".txt";

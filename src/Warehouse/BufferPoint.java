@@ -72,4 +72,19 @@ public class BufferPoint extends Storage  {
         return true;
     }
 
+    @Override
+    public boolean willBeFull(int numberOfBoxes) {
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder ret = new StringBuilder("BufferPoint{id=" + id + ", boxes=[");
+        for (Box box : this.boxes.values()) {
+            ret.append(box.getId()).append(", ");
+        }
+        ret.append("]}");
+        return ret.toString();
+    }
+
 }

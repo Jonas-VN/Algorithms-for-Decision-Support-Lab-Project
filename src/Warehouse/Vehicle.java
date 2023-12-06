@@ -94,6 +94,8 @@ public class Vehicle {
     public void loadBox(Box box) throws BoxNotAccessibleException, StackIsFullException {
         if (this.isFull()) throw new StackIsFullException("Vehicle " + this.id + " is full! Tried to add box: " + box.getId());
 
+        System.out.println(this.getName() + ": " + box);
+
         box.getStack().removeBox(box);
         box.setStack(null);
         this.stack.add(box);

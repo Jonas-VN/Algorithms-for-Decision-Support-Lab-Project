@@ -49,8 +49,10 @@ public class Vehicle {
 
     public void addRequest(Request request, int time) throws StackIsFullException, BoxNotAccessibleException {
         if (this.requests.size() >= this.capacity) throw new StackIsFullException("Vehicle " + this.id + " is full.");
+        request.getDestination().incrementNumberOfBoxesComing();
         this.currentRequest = request;
         this.requests.add(request);
+
 
         if (this.location == request.getPickup().getLocation()) {
             // Vehicle is already at the pickup location -> start loading
@@ -94,8 +96,6 @@ public class Vehicle {
     public void loadBox(Box box) throws BoxNotAccessibleException, StackIsFullException {
         if (this.isFull()) throw new StackIsFullException("Vehicle " + this.id + " is full! Tried to add box: " + box.getId());
 
-        System.out.println(this.getName() + ": " + box);
-
         box.getStack().removeBox(box);
         box.setStack(null);
         this.stack.add(box);
@@ -104,12 +104,14 @@ public class Vehicle {
     public void unloadBox(Box box, Storage storage) throws BoxNotAccessibleException, StackIsFullException {
         if (!this.stack.contains(box)) throw new BoxNotAccessibleException("Vehicle " + this.id + " does not contain box " + box.getId() + "!");
 
+        storage.decrementNumberOfBoxesComing();
         storage.addBox(box);
         box.setStack(storage);
         this.stack.remove(box);
     }
 
     public void unload(int time) throws BoxNotAccessibleException, StackIsFullException {
+//        if (this.id == 1) System.out.println("Trying to unload at time " + time + " with finish time " + this.timeFinishState);
         if (time == this.timeFinishState) {
             this.lastRequestFinishedTime = time;
             this.outputWriter.writeLine(this, time, Operation.UNLOAD);
@@ -183,7 +185,8 @@ public class Vehicle {
         boolean timeIsUp = time >= this.timeFinishState;
         boolean locationIsSame = this.location.equals(this.currentRequest.getDestination().getLocation());
         boolean canBeUsedByVehicle = this.currentRequest.getDestination().canBeUsedByVehicle(this.id);
-        return (timeIsUp || locationIsSame) && canBeUsedByVehicle && !this.currentRequest.getDestination().isFull();
+        boolean isFull = this.currentRequest.getDestination().isFull();
+        return (timeIsUp || locationIsSame) && canBeUsedByVehicle && !isFull;
     }
 
     public void moveToPickup(int time) throws BoxNotAccessibleException, StackIsFullException {

@@ -34,7 +34,7 @@ public class Stack extends Storage {
 
     @Override
     public boolean willBeFull(int numberOfBoxes) {
-        return this.boxes.size() + numberOfBoxes > this.capacity;
+        return this.boxes.size() + this.numberOfBoxesComing + numberOfBoxes > this.capacity;
     }
 
     @Override

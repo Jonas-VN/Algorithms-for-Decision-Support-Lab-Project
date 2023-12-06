@@ -54,6 +54,7 @@ public class Warehouse {
             this.allocateNextRequest(vehicle);
         }
 
+        int count = 0;
         while (!requests.isEmpty() || this.warehouseState != WarehouseState.FINISHED) {
             int numberOfVehiclesIdle = 0;
             for (Vehicle vehicle : vehicles) {
@@ -94,13 +95,6 @@ public class Warehouse {
                 if (this.warehouseState == WarehouseState.MOVING_TO_BUFFERPOINT_WITH_RELOCATION) {
                     this.setupRelocations();
                 }
-                else if (this.warehouseState == WarehouseState.UNDOING_RELOCATION) {
-                    System.out.println(requests);
-                }
-                if (this.warehouseState == WarehouseState.FINISHED) {
-                    System.out.println(requests);
-                    break;
-                }
             }
             else clock.tick();
         }
@@ -128,9 +122,9 @@ public class Warehouse {
                 for (Request request : this.requests) {
                     Storage pickup = request.getPickup();
                     if (request.getDestination() instanceof BufferPoint) {
+
                         if (request.getPickup().canRemoveBox(request.getBox())) {
                             this.doAccessibleRequest(vehicle, request);
-                            System.out.println(vehicle.getName() + ": Accessible request: " + vehicle.getCurrentRequest());
                             this.relocationPickupStorages.put(request.getPickup(), this.relocationPickupStorages.get(request.getPickup()) - 1);
                             this.relocationRequests.set(vehicle.getId(), request.getPickup());
                             return;
@@ -144,10 +138,11 @@ public class Warehouse {
                             }
                             this.relocationRequests.set(vehicle.getId(), request.getPickup());
                             // We need to undo the relocation
-                            this.undoRequests.add(new Request(-1, relocationStorage, pickup, pickup.peek()));
+                            if (this.usedBoxes.contains(pickup.peek())) {
+                                this.undoRequests.add(new Request(-1, relocationStorage, pickup, pickup.peek()));
+                            }
                             // We can just move it to the relocation storage
                             vehicle.addRequest(new Request(0, pickup, relocationStorage, pickup.peek()), clock.getTime());
-                            System.out.println(vehicle.getName() + ": Nieuwe request: " + vehicle.getCurrentRequest());
                             if (this.requestsToStack.containsKey(request.getDestination())) {
                                 this.requestsToStack.put(request.getDestination(), this.requestsToStack.get(request.getDestination()) - 1);
                             }
@@ -164,8 +159,6 @@ public class Warehouse {
                     if (request.getPickup().canRemoveBox(request.getBox()) && !request.isClaimed()) {
                         // The box is accessible and can be delivered
                         request.claim();
-                        System.out.print(vehicle.getName());
-                        System.out.println(request);
                         this.doAccessibleRequest(vehicle, request);
                         return;
                     }

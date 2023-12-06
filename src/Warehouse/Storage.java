@@ -10,6 +10,7 @@ public abstract class Storage {
     protected final Location location;
     protected int vehicleId = -1;
     protected final int capacity;
+    protected int numberOfBoxesComing = 0;
 
     public Storage(int id, Location location, int capacity, String name) {
         super();
@@ -17,6 +18,14 @@ public abstract class Storage {
         this.location = location;
         this.capacity = capacity;
         this.name = name;
+    }
+
+    public void incrementNumberOfBoxesComing() {
+        this.numberOfBoxesComing++;
+    }
+
+    public void decrementNumberOfBoxesComing() {
+        this.numberOfBoxesComing--;
     }
 
     public int getId() {

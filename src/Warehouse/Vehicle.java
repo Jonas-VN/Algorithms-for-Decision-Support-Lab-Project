@@ -148,7 +148,7 @@ public class Vehicle {
             // Control next state
             if (this.isFull()) {
                 // Vehicle is full -> start moving to delivery
-                // TODO: maybe sort on distance here and change the currentRequest to the closest one
+                this.requests.sort((lhs, rhs) -> Vehicle.compareToStorage(lhs.getDestination(), rhs.getDestination(), this));
                 this.setupMoveToDelivery(time);
                 this.moveToDelivery(time);
 
@@ -185,8 +185,7 @@ public class Vehicle {
         boolean timeIsUp = time >= this.timeFinishState;
         boolean locationIsSame = this.location.equals(this.currentRequest.getDestination().getLocation());
         boolean canBeUsedByVehicle = this.currentRequest.getDestination().canBeUsedByVehicle(this.id);
-        boolean isFull = this.currentRequest.getDestination().isFull();
-        return (timeIsUp || locationIsSame) && canBeUsedByVehicle && !isFull;
+        return (timeIsUp || locationIsSame) && canBeUsedByVehicle;
     }
 
     public void moveToPickup(int time) throws BoxNotAccessibleException, StackIsFullException {
@@ -242,5 +241,11 @@ public class Vehicle {
             return true;
         }
         else return false;
+    }
+
+    public static int compareToStorage(Storage lhs, Storage rhs, Vehicle vehicle) {
+        double lhsDistance = vehicle.getLocation().manhattanDistance(lhs.getLocation());
+        double rhsDistance = vehicle.getLocation().manhattanDistance(rhs.getLocation());
+        return Double.compare(lhsDistance, rhsDistance);
     }
 }

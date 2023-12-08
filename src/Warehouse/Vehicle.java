@@ -22,6 +22,7 @@ public class Vehicle {
     private int lastRequestFinishedTime = 0;
     private final OutputWriter outputWriter;
     private Storage freedStorage = null;
+    private boolean needsToCheckForSkip = false;
 
     public Vehicle(int id, Location location, int speed, int capacity, String name, int loadingDuration, OutputWriter outputWriter) {
         this.id = id;
@@ -111,17 +112,15 @@ public class Vehicle {
     }
 
     public void unload(int time) throws BoxNotAccessibleException, StackIsFullException {
-//        if (this.id == 1) System.out.println("Trying to unload at time " + time + " with finish time " + this.timeFinishState);
         if (time == this.timeFinishState) {
             this.lastRequestFinishedTime = time;
             this.outputWriter.writeLine(this, time, Operation.UNLOAD);
-
+            this.freedStorage = this.currentRequest.getDestination();
              // Fulfilled the full  -> can be removed
             this.requests.remove(this.currentRequest);
 
             // The storage is free for everyone again
             this.currentRequest.getDestination().resetUsedByVehicle();
-            this.freedStorage = this.currentRequest.getDestination();
 
             // Control next state
             if (this.requests.isEmpty()) {
@@ -142,9 +141,9 @@ public class Vehicle {
         if (time == this.timeFinishState) {
             this.lastRequestFinishedTime = time;
             this.outputWriter.writeLine(this, time, Operation.LOAD);
+            this.freedStorage = this.currentRequest.getPickup();
 
             this.currentRequest.getPickup().resetUsedByVehicle();
-            this.freedStorage = this.currentRequest.getPickup();
 
             // Control next state
             if (this.isFull()) {
@@ -172,6 +171,7 @@ public class Vehicle {
     public void moveToDelivery(int time) throws BoxNotAccessibleException, StackIsFullException {
         if (this.canStartUnloading(time)) {
             // Vehicle arrived at delivery -> start unloading
+            if (time > this.timeFinishState) this.needsToCheckForSkip = true;
             this.location = this.currentRequest.getDestination().getLocation();
             this.initNextState(VehicleState.UNLOADING, time + this.loadingDuration);
             this.currentRequest.getDestination().setUsedByVehicle(this.id);
@@ -234,5 +234,13 @@ public class Vehicle {
         Storage returnStorage = this.freedStorage;
         this.freedStorage = null;
         return returnStorage;
+    }
+
+    public boolean needsToCheckForSkip() {
+        if (this.needsToCheckForSkip) {
+            this.needsToCheckForSkip = false;
+            return true;
+        }
+        else return false;
     }
 }

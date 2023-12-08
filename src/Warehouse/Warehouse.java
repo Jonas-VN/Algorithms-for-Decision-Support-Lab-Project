@@ -19,7 +19,6 @@ public class Warehouse {
     private final ArrayList<Box> usedBoxes = new ArrayList<>();
     private final HashMap<Storage, Integer> requestsToStack; //TODO, misschien niet nodig
     private WarehouseState warehouseState = WarehouseState.MOVING_TO_BUFFERPOINT;
-    private final HashMap<Storage, Vehicle> freedStorages = new HashMap<>();
     private final ArrayList<Request> undoRequests = new ArrayList<>();
     private final HashMap<Storage, Integer> relocationPickupStorages = new HashMap<>();
     private final ArrayList<Storage> relocationRequests = new ArrayList<>();
@@ -49,25 +48,18 @@ public class Warehouse {
     }
 
     public void solve() throws BoxNotAccessibleException, StackIsFullException {
+        HashMap<Storage, Vehicle> previousFreedStorages = new HashMap<>();
+        HashMap<Storage, Vehicle> currentFreedStorages = new HashMap<>();
         final int numberOfVehicles = this.vehicles.size();
         for (Vehicle vehicle : vehicles) {
             this.allocateNextRequest(vehicle);
         }
 
-        int count = 0;
         while (!requests.isEmpty() || this.warehouseState != WarehouseState.FINISHED) {
             int numberOfVehiclesIdle = 0;
-            for (Vehicle vehicle : vehicles) {
-                if (vehicle.getCurrentRequest() != null &&
-                        vehicle.getCurrentRequest().getDestination() != null &&
-                        this.freedStorages.containsKey(vehicle.getCurrentRequest().getDestination())) {
-                    Vehicle freedByVehicle = this.freedStorages.get(vehicle.getCurrentRequest().getDestination());
-                    if (freedByVehicle.getId() > vehicle.getId()) {
-                        vehicle.skipTick();
-                    }
-                }
-            }
-            this.freedStorages.clear();
+
+            previousFreedStorages = new HashMap<>(currentFreedStorages);
+            currentFreedStorages.clear();
 
             for (Vehicle vehicle : vehicles) {
                 switch (vehicle.getState()) {
@@ -77,10 +69,21 @@ public class Warehouse {
                     case LOADING -> vehicle.load(clock.getTime());
                 }
                 Storage freedStorage = vehicle.getFreedStorage();
-                if (freedStorage != null) this.freedStorages.put(vehicle.getFreedStorage(), vehicle);
+                if (freedStorage != null) currentFreedStorages.put(freedStorage, vehicle);
             }
 
             for (Vehicle vehicle : vehicles) {
+                if (
+                        vehicle.needsToCheckForSkip() &&
+                        vehicle.getCurrentRequest() != null &&
+                        previousFreedStorages.containsKey(vehicle.getCurrentRequest().getDestination())
+                ) {
+                    Vehicle freedByVehicle = previousFreedStorages.get(vehicle.getCurrentRequest().getDestination());
+                    if (freedByVehicle.getId() > vehicle.getId()) {
+                        vehicle.skipTick();
+                        System.out.println("Vehicle " + vehicle.getId() + " skipped a tick");
+                    }
+                }
                 if (vehicle.getState() == VehicleState.IDLE) {
                     this.relocationRequests.set(vehicle.getId(), null);
                     this.allocateNextRequest(vehicle);
@@ -91,7 +94,6 @@ public class Warehouse {
 
             if (numberOfVehiclesIdle == numberOfVehicles) {
                 this.warehouseState = this.warehouseState.next();
-                System.out.println("Warehouse state: " + this.warehouseState);
                 if (this.warehouseState == WarehouseState.MOVING_TO_BUFFERPOINT_WITH_RELOCATION) {
                     this.setupRelocations();
                 }
@@ -186,7 +188,8 @@ public class Warehouse {
     private Storage getRelocationStorage(Storage pickup) {
         this.storages.sort((storage1, storage2) -> Storage.compareByLocationBox(storage1, storage2, pickup));
         for (Storage relocationStorage : storages) {
-            if (relocationStorage != pickup &&                                                                     // The storage is not the same as the pickup storage
+            if (
+                    relocationStorage != pickup &&                                                                 // The storage is not the same as the pickup storage
                     relocationStorage instanceof Stack &&                                                          // The storage is a stack
                     !relocationStorage.willBeFull(this.requestsToStack.get(relocationStorage) + 1) && // The storage will not be full after the relocation
                     this.relocationPickupStorages.get(relocationStorage) == 0                                      // The relocation storage is not used anymore for pickups

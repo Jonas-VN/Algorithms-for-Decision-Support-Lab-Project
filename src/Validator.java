@@ -18,7 +18,10 @@ public class Validator {
         int warnings = 0;
         int errors = 0;
 
-        String csvFile = "src/Output/src/output" + outputFile + ".txt";
+        String csvFile;
+        boolean doEarlyMovesToStack = Main.doEarlyMovesToStack;
+        if (!doEarlyMovesToStack) csvFile = "src/Output/src/output" + outputFile + ".txt";
+        else csvFile = "src/Output/src2/output" + outputFile + ".txt";
         System.out.println(csvFile);
 
         String jsonContent = new String(Files.readAllBytes(new File("src/Input/src/I" + outputFile + ".json").toPath()));

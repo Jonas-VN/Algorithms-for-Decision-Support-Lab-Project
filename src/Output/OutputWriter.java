@@ -13,6 +13,7 @@ public class OutputWriter {
     int counter = 0;
 
     public OutputWriter(File outputFile) throws IOException {
+        System.out.println("Output file: " + outputFile.getAbsolutePath());
         this.outputFile = outputFile;
         if (outputFile.exists()) outputFile.delete();
         outputFile.createNewFile();

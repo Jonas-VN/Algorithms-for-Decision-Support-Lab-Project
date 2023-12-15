@@ -72,12 +72,24 @@ public class Request {
                 '}';
     }
 
-    public static int compareTo(Request lhs, Request rhs, Vehicle vehicle) {
+    public static int compareToPickup(Request lhs, Request rhs, Vehicle vehicle) {
         double lhsDistance = vehicle.getLocation().manhattanDistance(lhs.getPickup().getLocation());
         // Add some extra distance behind the decimal point to prefer boxes that are on top of a stack
         lhsDistance += (double) lhs.getPickup().numberOfBoxesOnTop(lhs.getBox()) / 10;
 
         double rhsDistance = vehicle.getLocation().manhattanDistance(rhs.getPickup().getLocation());
+        // Add some extra distance behind the decimal point to prefer boxes that are on top of a stack
+        rhsDistance += (double) rhs.getPickup().numberOfBoxesOnTop(rhs.getBox()) / 10;
+
+        return Double.compare(lhsDistance, rhsDistance);
+    }
+
+    public static int compareToDestination(Request lhs, Request rhs, Vehicle vehicle) {
+        double lhsDistance = vehicle.getLocation().manhattanDistance(lhs.getDestination().getLocation());
+        // Add some extra distance behind the decimal point to prefer boxes that are on top of a stack
+        lhsDistance += (double) lhs.getPickup().numberOfBoxesOnTop(lhs.getBox()) / 10;
+
+        double rhsDistance = vehicle.getLocation().manhattanDistance(rhs.getDestination().getLocation());
         // Add some extra distance behind the decimal point to prefer boxes that are on top of a stack
         rhsDistance += (double) rhs.getPickup().numberOfBoxesOnTop(rhs.getBox()) / 10;
 

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 public class Vehicle {
     private final int id;
     private Location location;
+    private boolean locationIsABufferPoint = false;
     private final int speed;
     private final int capacity;
     private final String name;
@@ -33,6 +34,10 @@ public class Vehicle {
         this.loadingDuration = loadingDuration;
         this.stack = new ArrayList<>(capacity);
         this.outputWriter = outputWriter;
+    }
+
+    public boolean isAtABufferPoint() {
+        return this.locationIsABufferPoint;
     }
 
     public Request getCurrentRequest() {
@@ -173,6 +178,7 @@ public class Vehicle {
             // Vehicle arrived at delivery -> start unloading
             if (time > this.timeFinishState) this.needsToCheckForSkip = true;
             this.location = this.currentRequest.getDestination().getLocation();
+            this.locationIsABufferPoint = this.currentRequest.getDestination() instanceof BufferPoint;
             this.initNextState(VehicleState.UNLOADING, time + this.loadingDuration);
             this.currentRequest.getDestination().setUsedByVehicle(this.id);
             this.unloadBox(this.currentRequest.getBox(), this.currentRequest.getDestination());
@@ -191,6 +197,7 @@ public class Vehicle {
     public void moveToPickup(int time) throws BoxNotAccessibleException, StackIsFullException {
         if (this.canStartLoading(time)) {
             this.location = this.currentRequest.getPickup().getLocation();
+            this.locationIsABufferPoint = this.currentRequest.getPickup() instanceof BufferPoint;
             this.initNextState(VehicleState.LOADING, time + this.loadingDuration);
             this.currentRequest.getPickup().setUsedByVehicle(this.id);
             this.loadBox(this.currentRequest.getBox());

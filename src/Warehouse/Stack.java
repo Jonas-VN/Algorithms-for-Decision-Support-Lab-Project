@@ -99,4 +99,8 @@ public class Stack extends Storage {
         ret.append("]}");
         return ret.toString();
     }
+    @Override
+    public Box getBox(int index) {
+        return this.boxes.get(this.boxes.size() - 1 - index);
+    }
 }

@@ -78,6 +78,11 @@ public class BufferPoint extends Storage  {
     }
 
     @Override
+    public Box getBox(int index) {
+        return null;
+    }
+
+    @Override
     public String toString() {
         StringBuilder ret = new StringBuilder("BufferPoint{id=" + id + ", boxes=[");
         for (Box box : this.boxes.values()) {

@@ -54,7 +54,7 @@ public class Validator {
                 destinationLocation = new Location(Integer.parseInt(values[4]), Integer.parseInt(values[5]));
                 startTime = Integer.parseInt(values[3]);
                 endTime = Integer.parseInt(values[6]);
-
+                
                 if (!lastAccessed.containsKey(destinationLocation)) lastAccessed.put(destinationLocation, 0);
 
                 timeNeeded = startLocation.manhattanDistance(destinationLocation) / speed;
@@ -69,7 +69,7 @@ public class Validator {
 
                 // If a vehicle freed a stack at time t then next vehicle can free it as soon as t + loadDuration
                 if (lastAccessed.get(destinationLocation) + loadDuration > endTime && !bufferPointLocations.contains(destinationLocation)) {
-                    System.out.println(lineCount + " ERROR: UNFEASIBLE LOADING" + line);
+                    System.out.println(lineCount + " ERROR: UNFEASIBLE LOADING " + line);
                     errors++;
                 }
                 lastAccessed.put(destinationLocation, endTime);

@@ -72,6 +72,8 @@ public abstract class Storage {
         this.vehicleId = -1;
     }
 
+    public abstract Box getBox(int index);
+
     public static int compareByLocationBox(Storage s1, Storage s2, Storage reference) {
         final int s1Distance = s1.getLocation().manhattanDistance(reference.getLocation());
         final int s2Distance = s2.getLocation().manhattanDistance(reference.getLocation());

@@ -23,6 +23,7 @@ public class Warehouse {
     private final HashMap<Storage, Integer> relocationPickupStorages = new HashMap<>();
     private final ArrayList<Storage> relocationRequests = new ArrayList<>();
     private HashMap<Storage, Vehicle> previousFreedStorages = new HashMap<>();
+    int requestnumber = 0;
 
     public Warehouse(String problem, boolean doEarlyMovesToStack) throws IOException, StackIsFullException {
         this.doEarlyMovesToStack = doEarlyMovesToStack;
@@ -35,6 +36,7 @@ public class Warehouse {
         else outputWriter = new OutputWriter(new File("src/Output/src2/output" + problem + ".txt"));
         this.vehicles = parser.parseVehicles(outputWriter);
         this.requests = parser.parseRequests(storages);
+        requestnumber = this.requests.size();
         this.requestsToStack = new HashMap<>(stacks.size());
         this.requestsFromStack = new HashMap<>(stacks.size());
         for (Stack stack : stacks) {
@@ -97,6 +99,7 @@ public class Warehouse {
             }
             else clock.tick();
         }
+        System.out.println("Requests: " + requestnumber);
     }
 
     private void checkForSkip(Vehicle vehicle) {

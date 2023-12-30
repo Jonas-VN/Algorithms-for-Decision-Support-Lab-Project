@@ -10,7 +10,7 @@ public class Request {
     private final Box box;
     private int startTime = 0;
     private Location vehicleStartLocation = null;
-    private boolean claimed = false;
+    private int claimed = -1;
 
     public Request(int id, Storage pickup, Storage destination, Box box){
         this.id = id;
@@ -19,12 +19,12 @@ public class Request {
         this.box = box;
     }
 
-    public boolean isClaimed() {
-        return this.claimed;
+    public boolean isClaimed(int vehicleId) {
+        return this.claimed == vehicleId || this.claimed == -1;
     }
 
-    public void claim() {
-        this.claimed = true;
+    public void claim(int vehicleId) {
+        this.claimed = vehicleId;
     }
 
 

@@ -144,7 +144,7 @@ public class Warehouse {
                             this.relocationRequests.set(vehicle.getId(), request.getPickup());
                             return;
                         }
-                        else if (!this.relocationRequests.contains(request.getPickup())) {
+                        else if (!this.relocationRequests.contains(request.getPickup()) && request.isClaimed(vehicle.getId())) {
                             this.doRelocationRequest(vehicle, request);
                             return;
                         }
@@ -211,7 +211,7 @@ public class Warehouse {
     }
 
     private void doAccessibleRequest(Vehicle vehicle, Request request) throws StackIsFullException, BoxNotAccessibleException {
-        request.claim();
+        request.claim(vehicle.getId());
         this.requests.remove(request);
         vehicle.addRequest(request, clock.getTime());
         if (request.getDestination() instanceof Stack && this.requestsToStack.containsKey(request.getDestination())) {
@@ -223,6 +223,7 @@ public class Warehouse {
     }
 
     private void doRelocationRequest(Vehicle vehicle, Request request) throws StackIsFullException, BoxNotAccessibleException {
+        request.claim(vehicle.getId());
         Storage pickup = request.getPickup();
         Storage relocationStorage = this.getRelocationStorage(pickup);
         if (relocationStorage == null) {

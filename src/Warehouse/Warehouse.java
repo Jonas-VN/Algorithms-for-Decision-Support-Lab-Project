@@ -27,13 +27,13 @@ public class Warehouse {
 
     public Warehouse(String problem, boolean doEarlyMovesToStack) throws IOException, StackIsFullException {
         this.doEarlyMovesToStack = doEarlyMovesToStack;
-        JSONParser parser = new JSONParser(new File("src/Input/src/I" + problem + ".json"));
+        JSONParser parser = new JSONParser(new File(problem + ".json"));
         this.storages = parser.parseBufferPoints();
         ArrayList<Stack> stacks = parser.parseStacks();
         this.storages.addAll(stacks);
         OutputWriter outputWriter;
-        if (!doEarlyMovesToStack) outputWriter = new OutputWriter(new File("src/Output/src/output" + problem + ".txt"));
-        else outputWriter = new OutputWriter(new File("src/Output/src2/output" + problem + ".txt"));
+        if (!doEarlyMovesToStack) outputWriter = new OutputWriter(new File(problem + ".txt"));
+        else outputWriter = new OutputWriter(new File(problem + ".txt"));
         this.vehicles = parser.parseVehicles(outputWriter);
         this.requests = parser.parseRequests(storages);
         requestnumber = this.requests.size();
